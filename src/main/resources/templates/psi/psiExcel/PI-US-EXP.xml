@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="2" cell="6">cinvoiceNo</data>
+	<data row="3" cell="0">formatDate</data>
+	<data row="3" cell="6">pinvoiceNo</data>
+	<total space="1" cell="7">boxNumber</total>
+	<list startRow="20" items="items">
+		<field cell="0" colspan="0" type="1">id</field>
+		<fieldObject cell="1" name="product" colspan="0" type="0">brand</fieldObject>
+		<fieldObject cell="2" name="product" colspan="0" type="0">model</fieldObject>
+		<fieldObject cell="3" name="product" colspan="0" type="0">hkHscode</fieldObject>
+		<fieldObject cell="4" name="product" colspan="0" type="0">usHscode</fieldObject>
+		<fieldObject cell="5" name="product" colspan="0" type="0">type</fieldObject>
+		<field cell="6" colspan="0" type="0">quantity</field>
+        <field cell="7" colspan="0" type="0">itemPrice</field>
+        <field cell="8" colspan="0" type="1">totalVaule</field>       
+	</list>
+</datas>

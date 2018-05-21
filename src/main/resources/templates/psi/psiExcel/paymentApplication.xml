@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+ 	<data row="2" cell="0">flowInfo</data>
+    <data row="3" cell="1">applyTime</data>
+	<data row="3" cell="3">sureTime</data>
+    <data row="4" cell="3">supplierName</data>
+    <data row="6" cell="1">paymentNo</data>
+    <data row="7" cell="1">supplierAccount</data>
+    <data row="9" cell="1">moneyInfo</data>
+    <data row="10" cell="1">applyUserInfo</data>
+    <data row="12" cell="1">transportNoRemark</data>
+    <data row="13" cell="0">applyInfo</data>
+    <data row="14" cell="0">checkInfo</data>
+    <list startRow="16" items="items">
+	</list>
+</datas>

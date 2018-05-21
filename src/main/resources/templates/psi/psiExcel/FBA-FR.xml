@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="28" cell="1">shipmentId</data>
+	<data row="28" cell="7">totalQuantity</data>
+	<data row="28" cell="9">totalCarton</data>
+        <data row="12" cell="2">amazonWareHouse</data>
+    <data row="28" cell="12">tray</data>
+    <list startRow="29" items="tempItems">
+	</list>
+</datas>

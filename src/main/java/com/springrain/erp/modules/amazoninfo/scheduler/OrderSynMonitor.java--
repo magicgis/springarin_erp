@@ -1,0 +1,1713 @@
+package com.springrain.erp.modules.amazoninfo.scheduler;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.Vector;
+
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.dom4j.DocumentHelper;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.util.HtmlUtils;
+
+import com.amazonaws.mws.model.IdList;
+import com.amazonaws.mws.model.SubmitFeedRequest;
+import com.amazonservices.mws.client.MwsUtl;
+import com.amazonservices.mws.orders._2013_09_01.MarketplaceWebServiceOrders;
+import com.amazonservices.mws.orders._2013_09_01.MarketplaceWebServiceOrdersClient;
+import com.amazonservices.mws.orders._2013_09_01.MarketplaceWebServiceOrdersException;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrderItemsRequest;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrderItemsResponse;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersByNextTokenRequest;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersByNextTokenResponse;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersByNextTokenResult;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersRequest;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersResponse;
+import com.amazonservices.mws.orders._2013_09_01.model.ListOrdersResult;
+import com.amazonservices.mws.orders._2013_09_01.model.Order;
+import com.amazonservices.mws.orders._2013_09_01.model.OrderItem;
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.DomText;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.springrain.erp.common.config.Global;
+import com.springrain.erp.common.email.MailInfo;
+import com.springrain.erp.common.email.MailManager;
+import com.springrain.erp.common.utils.DateUtils;
+import com.springrain.erp.common.utils.HttpRequest;
+import com.springrain.erp.common.utils.StringUtils;
+import com.springrain.erp.modules.amazoninfo.entity.AmazonAccountConfig;
+import com.springrain.erp.modules.amazoninfo.entity.AmazonPromotionsWarning;
+import com.springrain.erp.modules.amazoninfo.entity.AmazonPromotionsWarningItem;
+import com.springrain.erp.modules.amazoninfo.entity.order.AmazonAddress;
+import com.springrain.erp.modules.amazoninfo.entity.order.AmazonOrder;
+import com.springrain.erp.modules.amazoninfo.entity.order.AmazonOrderItem;
+import com.springrain.erp.modules.amazoninfo.entity.order.AmazonOutboundOrder;
+import com.springrain.erp.modules.amazoninfo.entity.order.MfnOrder;
+import com.springrain.erp.modules.amazoninfo.htmlunit.AmzLoginPool;
+import com.springrain.erp.modules.amazoninfo.htmlunit.CountryType;
+import com.springrain.erp.modules.amazoninfo.htmlunit.LoginUtil;
+import com.springrain.erp.modules.amazoninfo.service.AmazonAccountConfigService;
+import com.springrain.erp.modules.amazoninfo.service.AmazonPromotionsWarningService;
+import com.springrain.erp.modules.amazoninfo.service.DiscountWarningService;
+import com.springrain.erp.modules.amazoninfo.service.EvaluateWarningService;
+import com.springrain.erp.modules.amazoninfo.service.SaleReportService;
+import com.springrain.erp.modules.amazoninfo.service.order.AmazonOrderService;
+import com.springrain.erp.modules.amazoninfo.service.order.AmazonOutboundOrderService;
+import com.springrain.erp.modules.amazoninfo.service.order.MfnOrderService;
+import com.springrain.erp.modules.amazoninfo.service.order.MfnPackageService;
+import com.springrain.erp.modules.amazoninfo.web.FeedSubmissionController;
+import com.springrain.erp.modules.amazoninfo.web.order.MfnOrderController;
+import com.springrain.erp.modules.psi.entity.PsiSku;
+import com.springrain.erp.modules.psi.service.PsiProductService;
+import com.springrain.erp.modules.sys.entity.User;
+import com.springrain.erp.modules.sys.service.SystemService;
+import com.springrain.erp.modules.weixin.utils.WeixinSendMsgUtil;
+
+public class OrderSynMonitor {
+	@Autowired
+	private AmazonOrderService 		orderService;
+	@Autowired
+	private PsiProductService 		productService;
+	@Autowired
+	private SaleReportService 		saleReportService;
+	@Autowired
+	private MfnOrderService 		mfnOrderService;
+	@Autowired
+	private DiscountWarningService  disWarningService;
+	@Autowired
+	private EvaluateWarningService  evaWarningService;
+	@Autowired
+	private MailManager 			mailManager;
+	@Autowired
+	private SystemService           sysService;
+	@Autowired
+	private AmazonPromotionsWarningService promotionsWarningService;
+	@Autowired
+	private AmazonOutboundOrderService amazonOutboundOrderService;
+	@Autowired
+	private MfnPackageService mfnPackageService;
+	@Autowired
+	private AmazonAccountConfigService amazonAccountConfigService;
+	
+	private static Map<String,Integer> proMap=Maps.newHashMap();
+	private static Map<String,String> countryNameMap;
+	
+	private static Set<String> orderIds = Sets.newHashSet();
+	static{
+		countryNameMap=Maps.newHashMap();
+		countryNameMap.put("de","德国");
+		countryNameMap.put("fr","法国");
+		countryNameMap.put("it","意大利");
+		countryNameMap.put("es","西班牙");
+		countryNameMap.put("uk","英国");
+		countryNameMap.put("com","美国");
+		countryNameMap.put("ca","加拿大");
+		countryNameMap.put("jp","日本");
+		countryNameMap.put("mx","墨西哥");
+	}
+		
+	public MfnOrderService getMfnOrderService() {
+		return mfnOrderService;
+	}
+
+	public void setMfnOrderService(MfnOrderService mfnOrderService) {
+		this.mfnOrderService = mfnOrderService;
+	}
+	
+	private  final Logger LOGGER = LoggerFactory.getLogger(getClass());
+	
+	public void synchronize() {
+		LOGGER.info("开始下载订单!!!!");
+		//AmazonWSConfig[] configs = AmazonWSConfig.values();
+		List<AmazonAccountConfig> configList=amazonAccountConfigService.findAllConfig();
+		List<Thread> threads = Lists.newArrayList(); 
+		final Vector<AmazonOrder> rs = new Vector<AmazonOrder>();
+		final Vector<AmazonOrder> mfn = new Vector<AmazonOrder>();
+		//final Vector<AmazonOrder> outboundOrder=new Vector<AmazonOrder>();
+		
+		for (final AmazonAccountConfig config : configList) {
+			Thread temp = new Thread(){
+				public void run() {
+					String key = config.getCountry();
+					MarketplaceWebServiceOrdersClient client = MarketplaceWSOrdersConfig.getClient(config);
+			        ListOrdersRequest request = new ListOrdersRequest();
+			        String sellerId = config.getSellerId();
+			        request.setSellerId(sellerId);
+			        //设置授权token
+			        String mwsAuthToken = null;
+			        if (StringUtils.isNotEmpty(config.getMwsAuthToken())) {
+			        	mwsAuthToken = config.getMwsAuthToken();
+					}
+			        request.setMWSAuthToken(mwsAuthToken);
+			        Timestamp time = orderService.getMaxOrderDateByAccount(config.getAccountName());
+			    	GregorianCalendar date =  new GregorianCalendar();
+			    	Map<String,AmazonOrder> saveOrdersMap = Maps.newHashMap();
+			    	int hour = -5;
+			    	if("de,com,com1".contains(key)||key.startsWith("com")){
+			    		hour = -3;
+			    	}
+			        if(time!=null){
+						Date st = DateUtils.addHours(new Date(time.getTime()),hour);
+						date.set(st.getYear()+1900,st.getMonth(),st.getDate(),st.getHours(),0,0);
+					}else{
+					    date.set(2013, 11, 31);
+					}
+			        Map<String,Float> priceMap = orderService.findPriceMapByAccount(config.getAccountName());
+			        LOGGER.info("开始下载"+key+":"+config.getAccountName()+"的订单!!!!startTime----"+date.getTime().toLocaleString());
+			        XMLGregorianCalendar createdAfter = MwsUtl.getDTF().newXMLGregorianCalendar(date);
+			        //检查修改的
+			        request.setLastUpdatedAfter(createdAfter);
+			        List<String> marketplaceId = new ArrayList<String>();
+			        marketplaceId.add(config.getMarketplaceId());
+			        request.setMarketplaceId(marketplaceId);
+			        Integer maxResultsPerPage = 100;
+			        request.setMaxResultsPerPage(maxResultsPerPage);
+			        try{
+				        ListOrdersResponse listOrdersResponse = invokeListOrders(client, request);
+				        if(listOrdersResponse!=null){
+					        ListOrdersResult  list = listOrdersResponse.getListOrdersResult();
+					        List<Order> orders = list.getOrders();
+					        saveOrdersMap.putAll(getOrderItemAndSave(orders,sellerId,client,key,config,priceMap,mwsAuthToken));
+					        if(StringUtils.isNotEmpty(list.getNextToken())){
+					        	 ListOrdersByNextTokenRequest request3 = new ListOrdersByNextTokenRequest();
+					             request3.setSellerId(sellerId);
+					             request3.setMWSAuthToken(mwsAuthToken);
+					             request3.setNextToken(list.getNextToken());
+					             ListOrdersByNextTokenResponse  response = invokeListOrdersByNextToken(client,request3);
+					             if(response!=null){
+						             ListOrdersByNextTokenResult rs =response.getListOrdersByNextTokenResult();
+						             getOrderItemAndSave(rs.getOrders(),sellerId,client,key,config,priceMap,mwsAuthToken); 
+						             while(StringUtils.isNotBlank(rs.getNextToken())){
+						            	 request3.setNextToken(rs.getNextToken());
+						            	 response = invokeListOrdersByNextToken(client,request3);
+						            	 if(response!=null){
+							            	 rs = response.getListOrdersByNextTokenResult();
+							            	 saveOrdersMap.putAll(getOrderItemAndSave(rs.getOrders(),sellerId,client,key,config,priceMap,mwsAuthToken)); 
+						            	 }else{
+						            		 break;
+						            	 }
+						             }
+					             }
+					        }
+				        }
+				        //检查新建的
+				        request.setLastUpdatedAfter(null);
+				        request.setCreatedAfter(createdAfter);
+				        listOrdersResponse = invokeListOrders(client, request);
+				        if(listOrdersResponse!=null){
+					        ListOrdersResult  list = listOrdersResponse.getListOrdersResult();
+					        List<Order> orders = list.getOrders();
+					        getOrderItemAndSaveNewOrder(saveOrdersMap,orders,sellerId,client,key,config,priceMap,mwsAuthToken);
+					        if(StringUtils.isNotEmpty(list.getNextToken())){
+					        	 ListOrdersByNextTokenRequest request3 = new ListOrdersByNextTokenRequest();
+					             request3.setSellerId(sellerId);
+					             request3.setMWSAuthToken(mwsAuthToken);
+					             request3.setNextToken(list.getNextToken());
+					             ListOrdersByNextTokenResponse  response = invokeListOrdersByNextToken(client,request3);
+					             if(response!=null){
+						             ListOrdersByNextTokenResult rs =response.getListOrdersByNextTokenResult();
+						             getOrderItemAndSaveNewOrder(saveOrdersMap,rs.getOrders(),sellerId,client,key,config,priceMap,mwsAuthToken);
+						             while(StringUtils.isNotBlank(rs.getNextToken())){
+						            	 request3.setNextToken(rs.getNextToken());
+						            	 response = invokeListOrdersByNextToken(client,request3);
+						            	 if(response!=null){
+							            	 rs = response.getListOrdersByNextTokenResult();
+							            	 getOrderItemAndSaveNewOrder(saveOrdersMap,rs.getOrders(),sellerId,client,key,config,priceMap,mwsAuthToken); 
+						            	 }else{
+						            		 break;
+						            	 }
+						             }
+					             }
+					        }
+				        }
+			        }catch(Exception e){
+			        	LOGGER.warn(key+":"+config.getAccountName()+"订单下载出异常了",e);
+			        }
+			        
+			        if(saveOrdersMap.size()>0){
+				    	  rs.addAll(saveOrdersMap.values());
+			        }
+			        LOGGER.info(key+":"+config.getAccountName()+"订单下载完成!!!!");
+				};
+			};
+			temp.start();
+			threads.add(temp);
+		}
+		
+		try {
+			Thread.sleep(720000);
+		} catch (InterruptedException e) {}
+		long st = System.currentTimeMillis();
+		long proess = 0;
+		while(threads.size()>0){
+			proess = Math
+					.round((float) (System.currentTimeMillis() - st) / 60000.0F + 0.5F);
+			if(proess>300L){
+				LOGGER.warn("下载订单线程超时了,准备打断中...");
+				for (Iterator<Thread> iterator = threads.iterator(); iterator.hasNext();) {
+					Thread thread = iterator.next();
+					if(thread.isAlive()){
+						try {
+							thread.stop();
+						} catch (Exception e) {}
+					}
+				}
+				break;
+			}
+			for (Iterator<Thread> iterator = threads.iterator(); iterator.hasNext();) {
+				Thread thread = iterator.next();
+				if(!thread.isAlive()){
+					iterator.remove();
+				}
+			}
+			try {
+				Thread.sleep(60000);
+			} catch (InterruptedException e) {}
+		}
+		
+		sendOrderNoticeMsg(rs);
+		
+		for (AmazonOrder amazonOrder : rs) {
+			try {
+				orderService.save2(amazonOrder);
+				if("de,com,jp,com1".contains(amazonOrder.getCountryChar())||amazonOrder.getCountryChar().startsWith("com")){
+					if("Unshipped,Shipped,Canceled".contains(amazonOrder.getOrderStatus())&&"MFN".equals(amazonOrder.getFulfillmentChannel())){
+							   LOGGER.info("自发货"+amazonOrder.getCountryChar()+"的订单,订单号:"+amazonOrder.getAmazonOrderId());
+							/*   if("de,com,jp,com1".contains(amazonOrder.getCountryChar())){*/
+								   mfn.add(amazonOrder);
+								   /* }else if("jp".equals(amazonOrder.getCountryChar())){
+								   if(!"Shipped".equals(amazonOrder.getOrderStatus())){
+									   outboundOrder.add(amazonOrder);
+								   }
+							   }*/
+					    
+					}
+		    	 }
+			} catch (Exception e) {
+				LOGGER.warn("锁表了"+e.getMessage()+"--"+amazonOrder.getSalesChannel()+"->"+amazonOrder.getAmazonOrderId());
+			}
+		}
+		
+		//检查下orderitem名字匹配问题
+		saleReportService.setOrderItemNullName();
+		
+		
+		try{
+			if(mfn.size()>0){
+				mfnOrderService.updateAndSaveAmazon(mfn);
+			}
+		}catch(Exception e){
+			LOGGER.error("统计自发货异常！",e);
+		}
+		
+		
+		String serverId = Global.getConfig("server.id");
+		if("1".equals(serverId)){//服务器标识  1：美国服务器   2：本地服务器（87）  3：香港服务器
+
+			saleReportService.updateAndSaveSales();
+			
+			try{
+				saleReportService.updateSalesAttr();
+				saleReportService.ebayAndVendorAndUnline();
+				saleReportService.updateMaxOrderAndPromotionsOrder();
+				saleReportService.updateAdsOrder();
+				saleReportService.updateReviewsOrSupportOrder();
+				saleReportService.findAmsOrder();
+				saleReportService.updateAndSaveMaxOrder();
+				saleReportService.updateAndSaveOtherSales();
+			}catch(Exception e){LOGGER.error("统计异常", e);}
+			
+			saleReportService.updateAndSaveSalesByType();
+			
+			new Thread(){
+				@Override
+				public void run(){
+					try{
+						
+					/*	if(outboundOrder.size()>0){
+							try{
+								amazonOutboundOrderService.updateAndSaveAmazon(outboundOrder);
+							}catch(Exception e){
+								LOGGER.error("MFN OUTBOUNDORDER",e);
+							}
+						}*/
+						//MFN order多渠道
+						try{
+							List<AmazonOutboundOrder> draftMfnOrders=amazonOutboundOrderService.findAllDraftMFNOrders();
+							for (AmazonOutboundOrder order : draftMfnOrders) {
+								mfnOrderService.synchronizeMfnOrder(order);
+							}
+						}catch(Exception e){
+							LOGGER.error("多渠道同步MFN Order",e);
+						}
+					}catch(Exception e){
+						LOGGER.error("同步自发货锁表",e);
+					}
+				}
+			}.start();	
+			
+			try{
+				LOGGER.info("折扣监控订单统计开始!!!!");
+				orderService.savePromotionsOrder();
+				LOGGER.info("折扣监控订单统计结束!!!!");
+			}catch(Exception e){
+				LOGGER.error("折扣订单统计异常！",e);
+			}
+			
+			try{
+				orderService.updateOrderExtract();
+			}catch(Exception e){
+				LOGGER.error("插入订单关联表信息异常！",e);
+			}
+			
+			LOGGER.info("下载订单和同步销量完成!!!!");
+			
+			try{
+				List<Object[]> list=orderService.findRateSn();
+				if(list!=null&&list.size()>0){
+					for (Object[] obj : list) {
+						orderService.setRateSn(obj[1].toString(),obj[0].toString());
+					}
+				}
+			}catch(Exception e){
+				LOGGER.error("TaxId异常！",e.getMessage());
+			}
+			//处理亚马逊折扣预警
+			new Thread(){
+				@Override
+				public void run(){
+					try{
+		                LOGGER.info("折扣监控开始!!!!");
+						exePromotionFbaInventoryWarning2();//自动促销预警扫描
+						LOGGER.info("折扣监控结束!!!!");
+					}catch(Exception e){
+						LOGGER.error("自动--促销预警扫描异常！",e);
+					}
+					
+				}
+			}.start();
+		}
+		
+    }
+	
+	private Map<String,AmazonOrder> getOrderItemAndSave(List<Order> orders , String sellerId ,
+			MarketplaceWebServiceOrdersClient client,String key,AmazonAccountConfig config, Map<String,Float> priceMap, String mwsAuthToken){
+		Map<String,AmazonOrder> rs = Maps.newHashMap();
+		for (Order order : orders) {
+			AmazonOrder aOrder = null;
+			if(orderService.isNotExist(order.getAmazonOrderId(), config.getAccountName())){
+				ListOrderItemsRequest request1 = new ListOrderItemsRequest();
+		        request1.setSellerId(sellerId);
+		        request1.setMWSAuthToken(mwsAuthToken);
+		        String amazonOrderId = order.getAmazonOrderId();
+		        if(StringUtils.isNotEmpty(amazonOrderId)){
+			        request1.setAmazonOrderId(amazonOrderId);
+			        ListOrderItemsResponse itemsResponse = invokeListOrderItems(client,request1);
+			        if(null != itemsResponse){
+						List<OrderItem> items = itemsResponse.getListOrderItemsResult().getOrderItems();
+						if(items!=null&&items.size()>0){
+							AmazonOrder amazonOrder = new AmazonOrder(order, items,key,config.getAccountName());
+							for (AmazonOrderItem orderItem : amazonOrder.getItems()) {
+								String sku = orderItem.getSellersku();
+								if(StringUtils.isNotEmpty(sku)){
+									PsiSku psiSku = productService.getProductBySku(sku, key);								
+									if(psiSku!=null){
+										orderItem.setProductName(psiSku.getProductName());
+										orderItem.setColor(psiSku.getColor());
+									}
+								}
+							}
+							aOrder = amazonOrder;
+						}else{
+							aOrder = new AmazonOrder(order,key,config.getAccountName());
+						}
+			        }else{
+			        	aOrder = new AmazonOrder(order,key,config.getAccountName());
+			        }
+		        }
+			}else{
+				//如果存在判断最后更新时间是否改变
+					AmazonOrder orderOld=this.orderService.findByEg(order.getAmazonOrderId(), config.getAccountName());
+					if(!orderOld.xmlGregorianToDate(order.getLastUpdateDate()).equals(orderOld.getLastUpdateDate())){
+						//最后更新时间有变动就更新
+							ListOrderItemsRequest request2 = new ListOrderItemsRequest();
+							request2.setSellerId(sellerId);
+							request2.setMWSAuthToken(mwsAuthToken);
+							request2.setAmazonOrderId(order.getAmazonOrderId());
+					        ListOrderItemsResponse itemsResponse = invokeListOrderItems(client,request2);
+					        if(null != itemsResponse){
+								List<OrderItem> items = itemsResponse.getListOrderItemsResult().getOrderItems();
+								if(items!=null&&items.size()>0){
+									AmazonOrder amazonOrder = new AmazonOrder(order, items,key,config.getAccountName());
+									//把属性放入原来的AmazonOrder
+									this.changeProperty(orderOld,amazonOrder,"1",key,config.getAccountName());
+								}else{
+									this.changeProperty(orderOld,new AmazonOrder(order,key,config.getAccountName()),"0",key,config.getAccountName());
+								}
+					        }else{
+					        	this.changeProperty(orderOld,new AmazonOrder(order,key,config.getAccountName()),"0",key,config.getAccountName());
+						    }
+					        aOrder = orderOld;
+				    }else{
+				    	continue;
+				    }
+			}
+			if(aOrder!=null&&"Pending".equals(aOrder.getOrderStatus())&&aOrder.getOrderTotal()==null){
+				List<AmazonOrderItem> list =  aOrder.getItems();
+				Float total = 0f ;
+				if(list!=null){
+					for (AmazonOrderItem amazonOrderItem : list) {
+						String sku = amazonOrderItem.getSellersku();
+						int num = amazonOrderItem.getQuantityOrdered();
+						Float price = priceMap.get(sku);
+						if(price==null){
+							//获取实时价格
+							price = orderService.getPriceByAccountSku(sku, key,config);
+						}
+						if(price!=null){
+							amazonOrderItem.setItemPrice(price*num);
+							total +=(amazonOrderItem.getItemPrice()); 
+							if(StringUtils.isNotEmpty(amazonOrderItem.getPromotionIds())){
+								LOGGER.info("开始获取估算折扣"+aOrder.getAmazonOrderId());
+								//获取及时折扣价
+								amazonOrderItem.setPromotionDiscount(promotionsWarningService.promotionPrice(aOrder.getCountryChar(), amazonOrderItem.getAsin(), amazonOrderItem.getPromotionIds(), amazonOrderItem.getItemPrice()));
+								if(total>0&&amazonOrderItem.getPromotionDiscount()!=null&&total>=amazonOrderItem.getPromotionDiscount()){
+									total = total-amazonOrderItem.getPromotionDiscount(); 
+								}
+							}
+						}
+					}
+					aOrder.setOrderTotal(total);
+				}
+			}else if (aOrder!=null&&"Pending".equals(aOrder.getOrderStatus())){
+				//修正折扣
+				List<AmazonOrderItem> list =  aOrder.getItems();
+				Float total = aOrder.getOrderTotal() ;
+				if(list!=null){
+					for (AmazonOrderItem amazonOrderItem : list) {
+						if(StringUtils.isNotEmpty(amazonOrderItem.getPromotionIds())&&amazonOrderItem.getPromotionDiscount() ==null&&amazonOrderItem.getItemPrice()!=null){
+							LOGGER.info("开始获取估算折扣"+aOrder.getAmazonOrderId());
+							amazonOrderItem.setPromotionDiscount(promotionsWarningService.promotionPrice(aOrder.getCountryChar(), amazonOrderItem.getAsin(), amazonOrderItem.getPromotionIds(), amazonOrderItem.getItemPrice()));
+							if(total>0&&amazonOrderItem.getPromotionDiscount()!=null&&total>=amazonOrderItem.getPromotionDiscount()){
+								total = total-amazonOrderItem.getPromotionDiscount(); 
+							}
+						}
+					}
+					aOrder.setOrderTotal(total);
+				}
+			}
+			if(aOrder!=null){
+				rs.put(aOrder.getAmazonOrderId(), aOrder);
+			}
+		}
+		return rs;
+   }
+	
+
+	private void getOrderItemAndSaveNewOrder(Map<String,AmazonOrder> saveOrders ,List<Order> orders , String sellerId ,MarketplaceWebServiceOrdersClient client,String key,AmazonAccountConfig config, Map<String,Float> priceMap, String mwsAuthToken){
+		for (Order order : orders) {
+			String amazonOrderId = order.getAmazonOrderId();
+			AmazonOrder aOrder = null;
+			
+			if(orderService.isNotExist(amazonOrderId, config.getAccountName())&&saveOrders.get(amazonOrderId)==null){
+				ListOrderItemsRequest request1 = new ListOrderItemsRequest();
+		        request1.setSellerId(sellerId);
+		        request1.setMWSAuthToken(mwsAuthToken);
+		        if(StringUtils.isNotEmpty(amazonOrderId)){
+			        request1.setAmazonOrderId(amazonOrderId);
+			        ListOrderItemsResponse itemsResponse = invokeListOrderItems(client,request1);
+			        if(null != itemsResponse){
+						List<OrderItem> items = itemsResponse.getListOrderItemsResult().getOrderItems();
+						if(items!=null&&items.size()>0){
+							AmazonOrder amazonOrder = new AmazonOrder(order, items,key,config.getAccountName());
+							for (AmazonOrderItem orderItem : amazonOrder.getItems()) {
+								String sku = orderItem.getSellersku();
+								if(StringUtils.isNotEmpty(sku)){
+									PsiSku psiSku = productService.getProductBySku(sku, key);								
+									if(psiSku!=null){
+										orderItem.setProductName(psiSku.getProductName());
+										orderItem.setColor(psiSku.getColor());
+									}
+								}
+							}
+							aOrder = amazonOrder;
+						}else{
+							aOrder = new AmazonOrder(order,key,config.getAccountName());
+						}
+			        }else{
+			        	aOrder = new AmazonOrder(order,key,config.getAccountName());
+			        }
+			        if("Pending".equals(aOrder.getOrderStatus())&&aOrder.getOrderTotal()==null){
+						List<AmazonOrderItem> list =  aOrder.getItems();
+						Float total = 0f ;
+						if(list!=null){
+							for (AmazonOrderItem amazonOrderItem : list) {
+								String sku = amazonOrderItem.getSellersku();
+								int num = amazonOrderItem.getQuantityOrdered();
+								Float price = priceMap.get(sku);
+								if(price==null){
+									//获取实时价格
+									price = orderService.getPriceByAccountSku(sku, key,config);
+								}
+								if(price!=null){
+									amazonOrderItem.setItemPrice(price*num);
+									total +=(amazonOrderItem.getItemPrice()); 
+									if(StringUtils.isNotEmpty(amazonOrderItem.getPromotionIds())){
+										//获取及时折扣价
+										//LOGGER.info("开始获取估算折扣"+aOrder.getAmazonOrderId());
+										amazonOrderItem.setPromotionDiscount(promotionsWarningService.promotionPrice(aOrder.getCountryChar(), amazonOrderItem.getAsin(), amazonOrderItem.getPromotionIds(), amazonOrderItem.getItemPrice()));
+										if(total>0&&amazonOrderItem.getPromotionDiscount()!=null&&total>=amazonOrderItem.getPromotionDiscount()){
+											total = total-amazonOrderItem.getPromotionDiscount(); 
+										}
+									}
+								}
+								
+							}
+							aOrder.setOrderTotal(total);
+						}
+					}else if ("Pending".equals(aOrder.getOrderStatus())){
+						//修正折扣
+						List<AmazonOrderItem> list =  aOrder.getItems();
+						Float total = aOrder.getOrderTotal() ;
+						if(list!=null){
+							for (AmazonOrderItem amazonOrderItem : list) {
+								if(StringUtils.isNotEmpty(amazonOrderItem.getPromotionIds())&&amazonOrderItem.getPromotionDiscount() ==null&&amazonOrderItem.getItemPrice()!=null){
+									LOGGER.info("开始获取估算折扣"+aOrder.getAmazonOrderId());
+									//获取及时折扣价
+									amazonOrderItem.setPromotionDiscount(promotionsWarningService.promotionPrice(aOrder.getCountryChar(), amazonOrderItem.getAsin(), amazonOrderItem.getPromotionIds(), amazonOrderItem.getItemPrice()));
+									if(total>0&&amazonOrderItem.getPromotionDiscount()!=null&&total>=amazonOrderItem.getPromotionDiscount()){
+										total = total-amazonOrderItem.getPromotionDiscount(); 
+									}
+								}
+							}
+							aOrder.setOrderTotal(total);
+						}
+					}
+			        saveOrders.put(amazonOrderId,aOrder);
+		        }
+			}
+		}
+   }
+	
+	/**
+	 * 把新的属性放到旧的里，然后更新
+	 * 
+	 */  
+	public void changeProperty(AmazonOrder oldOrder,AmazonOrder newOrder,String itemFlag,String key,String accountName ){
+		AmazonAddress newAddr = newOrder.getShippingAddress();
+		if("1".equals(itemFlag)){
+			//如果item请求不为空，保存items
+			Map<String,AmazonOrderItem> itemMap= new HashMap<String, AmazonOrderItem>();
+			Set<String> newOrderIdSet = new HashSet<String>();
+			
+			for(AmazonOrderItem item1:oldOrder.getItems()){
+				itemMap.put(item1.getOrderItemId(), item1);
+			}
+			//如果原来新的orderId   把原来的找到更新字段
+			for(AmazonOrderItem item :newOrder.getItems()){
+				newOrderIdSet.add(item.getOrderItemId());
+				if(itemMap.containsKey(item.getOrderItemId())){
+					//把旧的数据查出item放旧的
+					AmazonOrderItem oldItem= itemMap.get(item.getOrderItemId());
+					oldItem.setAsin(item.getAsin());
+					oldItem.setCodFee(item.getCodFee());
+					oldItem.setCodFeeDiscount(item.getCodFeeDiscount());
+					oldItem.setConditionId(item.getConditionId());
+					oldItem.setConditionNote(item.getConditionNote());
+					oldItem.setConditionSubtypeId(item.getConditionSubtypeId());
+					oldItem.setGiftMessageText(item.getGiftMessageText());
+					oldItem.setGiftWrapLevel(item.getGiftWrapLevel());
+					oldItem.setGiftWrapPrice(item.getGiftWrapPrice());
+					oldItem.setGiftWrapTax(item.getGiftWrapTax());
+					if(item.getItemPrice()!=null){
+						if(item.getQuantityOrdered()!=null && item.getQuantityOrdered()>0){
+							if(item.getItemPrice()>0f){
+								//防止在二次更新时，将预估出来的数据用0覆盖掉
+								oldItem.setItemPrice(item.getItemPrice());
+							}
+						}else{
+							oldItem.setItemPrice(item.getItemPrice());
+						}
+					}
+					oldItem.setItemTax(item.getItemTax());
+					oldItem.setOrderItemId(item.getOrderItemId());
+					oldItem.setPromotionDiscount(item.getPromotionDiscount());
+					oldItem.setPromotionIds(item.getPromotionIds());
+					Integer oldOrdered = oldItem.getQuantityOrdered();
+					Integer newOrdered = item.getQuantityOrdered()==null?0:item.getQuantityOrdered();
+					if(!"Canceled".equals(oldOrder.getOrderStatus())){
+						oldItem.setQuantityOrdered(newOrdered);
+					}
+					if(!newOrdered.equals(oldOrdered)&&"Pending".equals(oldOrder.getOrderStatus())){
+						oldOrder.setOrderTotal(null);
+					}
+					oldItem.setQuantityShipped(item.getQuantityShipped());
+					oldItem.setScheduledDeliveryEndDate(item.getScheduledDeliveryEndDate());
+					oldItem.setScheduledDeliveryStartDate(item.getScheduledDeliveryStartDate());
+					oldItem.setSellersku(item.getSellersku());
+					if(StringUtils.isNotEmpty(oldItem.getSellersku())&&StringUtils.isEmpty(item.getProductName())){
+						PsiSku psiSku = productService.getProductBySku(oldItem.getSellersku(), key);								
+						if(psiSku!=null){
+							oldItem.setProductName(psiSku.getProductName());
+							oldItem.setColor(psiSku.getColor());
+						}
+					}
+					oldItem.setShippingDiscount(item.getShippingDiscount());
+					oldItem.setShippingPrice(item.getShippingPrice());
+					oldItem.setShippingTax(item.getShippingTax());
+					oldItem.setTitle(item.getTitle());
+					oldItem.setBuyerCustomizedInfo(item.getBuyerCustomizedInfo());
+                    oldItem.setPriceDesignation(item.getPriceDesignation());
+				}else{
+					item.setOrder(oldOrder);
+					oldOrder.getItems().add(item);
+				}
+			}
+			//如果新的里面有没有老的orderId，把这个数据库里的这个item干掉
+			for (Iterator<AmazonOrderItem> iterator = oldOrder.getItems().iterator(); iterator.hasNext();) {
+				if(!newOrderIdSet.contains(iterator.next().getOrderItemId())){
+					iterator.remove();
+				}
+			}
+		}
+		
+		oldOrder.setBuyerEmail(newOrder.getBuyerEmail());
+		oldOrder.setBuyerName(newOrder.getBuyerName());
+		oldOrder.setSellerOrderId(newOrder.getSellerOrderId());
+		oldOrder.setPurchaseDate(newOrder.getPurchaseDate());
+		oldOrder.setLastUpdateDate(newOrder.getLastUpdateDate());
+		oldOrder.setOrderStatus(newOrder.getOrderStatus());
+		oldOrder.setFulfillmentChannel(newOrder.getFulfillmentChannel());
+		oldOrder.setSalesChannel(newOrder.getSalesChannel());
+		oldOrder.setAccountName(accountName);
+		
+		oldOrder.setOrderChannel(newOrder.getOrderChannel());
+		oldOrder.setShipmentServiceLevelCategory(newOrder.getShipmentServiceLevelCategory());
+		oldOrder.setShipServiceLevel(newOrder.getShipServiceLevel());
+		if(!"Pending".equals(newOrder.getOrderStatus())){
+			oldOrder.setOrderTotal(newOrder.getOrderTotal());
+		}
+		oldOrder.setNumberOfItemsShipped(newOrder.getNumberOfItemsShipped());
+		oldOrder.setNumberOfItemsUnshipped(newOrder.getNumberOfItemsUnshipped());
+		oldOrder.setPaymentMethod(newOrder.getPaymentMethod());
+		oldOrder.setMarketplaceId(newOrder.getMarketplaceId());
+		oldOrder.setCbaDisplayableShippingLabel(newOrder.getCbaDisplayableShippingLabel());
+		oldOrder.setOrderType(newOrder.getOrderType());
+		oldOrder.setEarliestShipDate(newOrder.getEarliestShipDate());
+		oldOrder.setLatestShipDate(newOrder.getLatestShipDate());
+		oldOrder.setEarliestDeliveryDate(newOrder.getEarliestDeliveryDate());
+		oldOrder.setLatestDeliveryDate(newOrder.getLatestDeliveryDate());
+		oldOrder.setIsBusinessOrder(newOrder.getIsBusinessOrder());
+		oldOrder.setIsPremiumOrder(newOrder.getIsPremiumOrder());
+		oldOrder.setIsPrime(newOrder.getIsPrime());
+		oldOrder.setIsReplacementOrder(newOrder.getIsReplacementOrder());
+		oldOrder.setReplacedOrderId(newOrder.getReplacedOrderId());
+		oldOrder.setBuyerTaxInfo(newOrder.getBuyerTaxInfo());
+		oldOrder.setPurchaseOrderNumber(newOrder.getPurchaseOrderNumber());
+		oldOrder.setPaymentMethodDetail(newOrder.getPaymentMethodDetail());
+		if(newAddr!=null){
+			AmazonAddress oldAddr = oldOrder.getShippingAddress();
+			if(oldAddr==null){
+				oldAddr= new AmazonAddress();
+				oldOrder.setShippingAddress(oldAddr);
+			}
+			oldAddr.setAddressLine1(HtmlUtils.htmlUnescape(newAddr.getAddressLine1()));
+			oldAddr.setAddressLine2(HtmlUtils.htmlUnescape(newAddr.getAddressLine2()));
+			oldAddr.setAddressLine3(HtmlUtils.htmlUnescape(newAddr.getAddressLine3()));
+			oldAddr.setCity(HtmlUtils.htmlUnescape(newAddr.getCity()));
+			oldAddr.setCountryCode(HtmlUtils.htmlUnescape(newAddr.getCountryCode()));
+			oldAddr.setCounty(HtmlUtils.htmlUnescape(newAddr.getCounty()));
+			oldAddr.setDistrict(HtmlUtils.htmlUnescape(newAddr.getDistrict()));
+			oldAddr.setName(HtmlUtils.htmlUnescape(newAddr.getName()));
+			oldAddr.setPhone(newAddr.getPhone());
+			oldAddr.setPostalCode(newAddr.getPostalCode());
+			oldAddr.setStateOrRegion(HtmlUtils.htmlUnescape(newAddr.getStateOrRegion()));
+		}
+	}
+	
+	private ListOrdersResponse invokeListOrders(
+            MarketplaceWebServiceOrders client, 
+            ListOrdersRequest request) {
+		request.setMaxResultsPerPage(100);
+		int i = 0 ;
+    	while(i<3){
+	        try {
+	            ListOrdersResponse response = client.listOrders(request);
+	            return response;
+	        } catch (MarketplaceWebServiceOrdersException ex) {
+	        	if("RequestThrottled".equals(ex.getErrorCode())){
+	        		try {
+						Thread.sleep(60000);
+					} catch (InterruptedException e) {}
+	        		return invokeListOrders(client,request);
+	        	}else{
+	        		LOGGER.warn("出错了:"+ex.getDetail()+"===invokeListOrders===",ex);
+	        		try {
+						Thread.sleep(60000);
+					} catch (InterruptedException e) {}
+	        		i++;
+	        	}
+	        }
+    	}
+        LOGGER.warn("请求订单出错!");
+        return null;
+    }
+	
+    private  ListOrderItemsResponse invokeListOrderItems(
+            MarketplaceWebServiceOrders client, 
+            ListOrderItemsRequest request) {
+    	int i = 0 ;
+    	while(i<3){
+	        try {
+	            ListOrderItemsResponse response = client.listOrderItems(request);
+	            return response;
+	        } catch (MarketplaceWebServiceOrdersException ex) {
+	        	if("RequestThrottled".equals(ex.getErrorCode())){
+	        		try {
+						Thread.sleep(8000);
+					} catch (InterruptedException e) {}
+	        		return invokeListOrderItems(client,request);
+	        	}else{
+	        		i++;
+	        		LOGGER.warn("出错了:"+ex.getDetail()+"===invokeListOrderItems==="+request.getAmazonOrderId());
+	        		try {
+						Thread.sleep(60000);
+					} catch (InterruptedException e) {}
+	        		
+	        	}
+	        }
+    	}
+        LOGGER.warn("请求订单商品信息出错!订单id为"+request.getAmazonOrderId());
+        return null;
+    }
+    
+    private ListOrdersByNextTokenResponse invokeListOrdersByNextToken(
+            MarketplaceWebServiceOrders client, 
+            ListOrdersByNextTokenRequest request) {
+    	int i = 0 ;
+    	while(i<3){
+	        try {
+	            ListOrdersByNextTokenResponse response = client.listOrdersByNextToken(request);
+	            return response;
+	        } catch (MarketplaceWebServiceOrdersException ex) {
+	        	if("RequestThrottled".equals(ex.getErrorCode())){
+	        		try {
+						Thread.sleep(60000);
+					} catch (InterruptedException e) {}
+	        		return invokeListOrdersByNextToken(client,request);
+	        	}else{
+	        		LOGGER.warn("出错了:"+ex.getDetail()+"===invokeListOrdersByNextToken===");
+	        		try {
+						Thread.sleep(60000);
+					} catch (InterruptedException e) {}
+	        		i++;
+	        	}
+	        }
+    	}
+        LOGGER.warn("请求订单翻页出错!");
+        return null;
+    }   
+    
+    
+    
+    
+    
+    public void setOrderService(AmazonOrderService orderService) {
+		this.orderService = orderService;
+	}
+    
+
+	public void setSaleReportService(SaleReportService saleReportService) {
+		this.saleReportService = saleReportService;
+	}
+
+	public void exeFreePromotionWarning(){
+		try{	
+			List<AmazonPromotionsWarning> warnings=promotionsWarningService.findFreePromotions();
+			Map<String,Set<String>> map=Maps.newHashMap();
+			for(AmazonPromotionsWarning warning :warnings){
+				int flag=0;
+				String promId = warning.getPromotionId();
+				String country=warning.getCountry();
+				/*for(AmazonPromotionsWarningItem item:warning.getItems()){
+					        String asin = item.getAsin();
+							if(this.orderService.getFreeOverHourQuantityByAsin(country,asin, promId)){
+								LOGGER.info(promId+" FreePromotion累计24小时超过30");
+								flag=1;
+								break;
+							}
+				}*/
+				/*if(flag!=1){
+					if(this.orderService.getFreeOverHourQuantity(country,promId)){
+						LOGGER.info("FreePromotion累计30分钟超过5");
+						flag=1;
+					}
+				}*/
+				if(this.orderService.getFreeOverQuantity(country,promId)){
+					LOGGER.info(promId+" FreePromotion累计24小时超过30");
+					flag=1;
+				}
+				if(flag==1){
+					Set<String> set=map.get(warning.getCountry());
+					if(set==null){
+						set=Sets.newHashSet();
+						map.put(warning.getCountry(),set);
+					}
+				    set.add(warning.getPromotionId());
+				}
+			}
+			if(map!=null&&map.size()>0){
+				//分国家结束促销预警
+				Map<String,String> resMap=Maps.newHashMap();
+				for (Map.Entry<String,Set<String>> entryMap : map.entrySet()) {  
+				    String countryKey=entryMap.getKey();
+					LOGGER.info("调用amazon接口start");
+					Map<String,String> curResMap = this.productService.endPromotions(countryKey,entryMap.getValue());
+					LOGGER.info("调用amazon接口end");
+					if(curResMap!=null&&curResMap.size()>0){
+						resMap.putAll(curResMap);
+						for (Map.Entry<String,String> entry : resMap.entrySet()) { 
+						    String tranId=entry.getKey();
+							this.promotionsWarningService.updateStaAndRes(tranId,countryKey,entry.getValue());
+						}
+					}else{
+						LOGGER.info("返回结果为空");
+					}
+				}
+				
+				Map<String, String> emailAndLoginNameMap = sysService.findLoginNameByEmail();
+				
+				//过期发信
+				for (Map.Entry<String,Set<String>> entry : map.entrySet()) { 
+				    String country=entry.getKey();
+				    Set<String> codeSet=entry.getValue();
+					List<String> countryList=Lists.newArrayList(country);
+					List<String> roleNameList=Lists.newArrayList("amazoninfo:feedSubmission:");
+				    Map<String,Set<String>> composeMap=sysService.getEmailMap(countryList,roleNameList);
+				    String toEmail="";
+				    String toEmail2="";
+				    if(composeMap.get(country+",")!=null&&composeMap.get(country+",").size()>0){
+				    	for (String set :composeMap.get(country+",")) {
+							toEmail+=set+",";
+							toEmail2=emailAndLoginNameMap.get(set)+"|";
+						}
+				    }	
+					StringBuffer content= new StringBuffer("以下免费折扣24小时超过30，已经停止监控：\n\n");
+					for(String proCode:codeSet){   
+						content.append(proCode+"\n");
+					}
+					noteClaimer(toEmail+",ethan@inateck.com,eileen@inateck.com,tim@inateck.com",("com".equals(country)?"us":country)+"免费折扣24小时超过30"+DateUtils.getDateTime(),content.toString());
+					try{
+						WeixinSendMsgUtil.sendTextMsgToUser(toEmail2+"|ethan|eileen|tim|maik",content.toString());
+					}catch(Exception e){
+						LOGGER.error("免费折扣24小时超过30！",e);
+					}
+				}
+				
+			}
+		}catch(Exception e){
+			LOGGER.error(e.getMessage(),e);
+		}
+		
+	}
+	
+	
+	public void exePromotionFbaInventoryWarning2(){
+		//exeFreePromotionWarning();
+		Map<String, String> emailAndLoginNameMap = sysService.findLoginNameByEmail();
+		try{	
+			List<AmazonPromotionsWarning> warnings=promotionsWarningService.findByEage();
+			
+			Map<String,Set<String>> userProMap=  Maps.newHashMap();   //用户id  折扣码 
+			Map<String,User> emailMap=  Maps.newHashMap();   //用户id  用户邮箱
+			Map<String,Set<String>> countryMap = Maps.newHashMap(); //国家code   折扣码
+			Map<String,Set<String>> outDateMap = Maps.newHashMap();//用户id 折扣码   过期end发信
+			Map<String,String>  overStaMap  = Maps.newHashMap();    //key:用户id+折扣码     30分钟还是累计超标
+			
+			try{
+				Map<String,Set<String>> entireWarn=promotionsWarningService.findEntireCatalogByCountry();
+				if(entireWarn!=null&&entireWarn.size()>0){
+					Map<String,Map<String,Integer>> tempPro=Maps.newHashMap();
+					for (Map.Entry<String,Set<String>> entryWarn : entireWarn.entrySet()) {  
+					    String country=entryWarn.getKey();
+						Set<String> proSet=entryWarn.getValue();
+						for (String proId : proSet) {
+							Integer quantity=orderService.getEntireCatlogueQuantity(country, proId);
+							if(quantity>100){
+								Map<String,Integer> temp=tempPro.get(country);
+								if(temp==null){
+									temp=Maps.newHashMap();
+									tempPro.put(country, temp);
+								}
+								temp.put(proId, quantity);
+							}
+						}
+					}
+					if(tempPro!=null&&tempPro.size()>0){
+						for (Map.Entry<String,Map<String,Integer>>  proMap: tempPro.entrySet()) {
+							String country=proMap.getKey();
+							Map<String,Integer> tempProMap=proMap.getValue();
+							StringBuffer content = new StringBuffer("");
+							Map<String,String> curResMap = this.productService.endPromotions(country,tempProMap.keySet());
+							if(curResMap!=null&&curResMap.size()>0){
+								for (Map.Entry<String,String> entry : curResMap.entrySet()) {  
+								    String tranId=entry.getKey();
+									if(entry.getValue().startsWith("成功")&&tranId.contains("WEB")){
+										String proCode=promotionsWarningService.getPromotionCode(tranId,country);
+										if(StringUtils.isNotBlank(proCode)){
+											String countryCode=("com".equals(country)?"us":country);
+											String pageUrl="http://50.62.30.1/api2.0/public/magento/codeStatus?app_key=azmv9M3sU2SI2aMK9qMAfF6sB5l2pF96&code="+proCode+"&country="+countryCode+"&status=0";
+											Document  doc=HttpRequest.reqUrl(pageUrl, null, false);
+											if(doc!=null){
+												LOGGER.info("官网code:"+doc.text());
+											}
+										}
+									}
+									content.append("全局折扣累计24小时超过100,数量："+tempProMap.get(tranId)+"Tracking Id为："+tranId+":"+curResMap.get(tranId)+"\n\n");
+									this.promotionsWarningService.updateStaAndRes(tranId,country, curResMap.get(tranId));
+								}
+							}
+							try{
+								if(content!=null&&content.length()>0){
+									List<String> countryList=Lists.newArrayList(country);
+									List<String> roleNameList=Lists.newArrayList("amazoninfo:feedSubmission:");
+								    Map<String,Set<String>> composeMap=sysService.getEmailMap(countryList,roleNameList);
+								    String toEmail="";
+								    if(composeMap.get(country+",")!=null&&composeMap.get(country+",").size()>0){
+								    	for (String set :composeMap.get(country+",")) {
+											toEmail=emailAndLoginNameMap.get(set)+"|";
+										}
+								    }	
+								    WeixinSendMsgUtil.sendTextMsgToUser(toEmail+"|eileen",content.toString());
+								}
+							}catch(Exception e){
+								LOGGER.error("促销超标过期微信发送账号错误异常！",e);
+							}
+						}
+					}
+				}
+			}catch(Exception e){
+				LOGGER.error(e.getMessage(),e);
+			}
+			
+			Date curDate = new Date();
+			for(AmazonPromotionsWarning warning :warnings){
+				Set<String>  proIds = null;
+				Set<String>  proIdsUser = null;
+				Set<String>  outProIds  = null; 
+				//如果折扣过期就更新监控状态
+				Date endDate = warning.getEndDate();
+				if("com".equals(warning.getCountry())){
+					endDate=DateUtils.addDays(endDate, 1);
+				}else if("ca,mx".contains(warning.getCountry())){
+					endDate=DateUtils.addHours(endDate, 12);
+				}else if("uk,fr,it,es,de".contains(warning.getCountry())){
+					endDate=DateUtils.addHours(endDate,8);
+				}
+				
+				if(endDate.before(curDate)){//当前时间大于等于结束时间时，停止扫描
+					boolean userFlag=false;
+					if(warning.getUpdateUser()!=null){
+						if("1".equals(sysService.getUser(warning.getUpdateUser().getId()).getDelFlag())){//用户删除
+							userFlag=true;
+						}
+					}
+					User createUser = sysService.getUser((warning.getUpdateUser()==null||userFlag)?"1":warning.getUpdateUser().getId());
+					if(outDateMap.get(createUser.getId()+"_"+warning.getCountry())==null){
+						outProIds = Sets.newHashSet();
+					}else{
+						outProIds=outDateMap.get(createUser.getId()+"_"+warning.getCountry());
+					}
+					outProIds.add(warning.getPromotionId());
+					outDateMap.put(createUser.getId()+"_"+warning.getCountry(), outProIds);
+					if(emailMap.get(createUser.getId()+"_"+warning.getCountry())==null){
+						emailMap.put(createUser.getId()+"_"+warning.getCountry(), createUser);
+					}
+					LOGGER.error(curDate+"=="+endDate);
+					this.promotionsWarningService.updateStaAndResById(warning.getId(), "结束时间过期停止监控");
+					continue;
+				}
+				int flag=0;
+				String detailRes = "";
+				String country=warning.getCountry();
+				for(AmazonPromotionsWarningItem item:warning.getItems()){
+					//半小时峰值
+					Integer harfHourWarning = item.getHalfHourQuantity();
+					Integer cumulativeWarning = item.getCumulativeQuantity();
+					String asin = item.getAsin();
+					String promId = warning.getPromotionId();
+					Date maxDate=this.orderService.getMaxTimeByAsin(country,asin, promId);
+					if(maxDate!=null){
+						
+						if(cumulativeWarning!=null){
+							//该促销码累计销量
+							Integer cumulativeQuantity=this.orderService.getCumulativeQuantityByAsin(country,asin, promId);
+							if(harfHourWarning!=null&&cumulativeQuantity<harfHourWarning){
+								flag=3;
+							}
+							if(cumulativeWarning<=cumulativeQuantity){
+								//detailRes="产品Asin:"+asin+",";
+								detailRes="产品:"+item.getProductNameColor()+"("+asin+"),累计销量限制："+cumulativeWarning+",数量:"+cumulativeQuantity+",";
+								
+								flag=2;
+								break;
+							}else{
+								try{
+									if(cumulativeQuantity>0&&cumulativeQuantity*100/cumulativeWarning>=90){
+										if(proMap==null||proMap.get(warning.getPromotionId())==null||proMap.get(warning.getPromotionId())<3){
+											if(warning.getCreateUser()!=null){
+												boolean delFlag=false;
+												if("1".equals(sysService.getUser(warning.getCreateUser().getId()).getDelFlag())){//用户删除
+													delFlag=true;
+												}
+												String info=("com".equals(warning.getCountry())?"US":warning.getCountry().toUpperCase())+","+warning.getPromotionId()+"累计销量超过90%,产品:"+item.getProductNameColor()+"("+asin+"),累计销量限制："+cumulativeWarning+",数量:"+cumulativeQuantity;
+												if(delFlag){
+													WeixinSendMsgUtil.sendTextMsgToUser("maya|tim|eileen",info);
+												}else{
+													User createUser = sysService.getUser(warning.getCreateUser().getId());
+													if("com".equals(warning.getCountry())){
+														WeixinSendMsgUtil.sendTextMsgToUser(createUser.getName()+"|tim|eileen",info);
+													}else{
+														WeixinSendMsgUtil.sendTextMsgToUser(createUser.getName()+"|tim|eileen",info);
+													}
+												}
+												Integer num=0;
+												if(proMap!=null&&proMap.get(warning.getPromotionId())!=null){
+													num=proMap.get(warning.getPromotionId());
+												}
+												proMap.put(warning.getPromotionId(),num+1);
+											}
+										}
+									}
+								}catch(Exception e){
+									LOGGER.error("error！",e);
+								}
+							}
+						}
+						if(flag!=3&&flag!=2&&harfHourWarning!=null){
+							//最近30分、60分、90分预警
+							/*if(this.orderService.getHalfHourQuantityByAsin(country,asin, promId,maxDate,harfHourWarning)){
+								LOGGER.info("触发半小时");
+								flag=1;
+								detailRes="产品Asin:"+asin+",";
+								break;
+							}*/
+							try{
+								Date tempMaxDate=this.orderService.getMaxTimeByAsin2(country,asin, promId);
+								if(tempMaxDate!=null&&DateUtils.addDays(new Date(),-1).before(tempMaxDate)){
+									Integer halfQuantity=orderService.getHalfHourQuantityByAsin(country,asin,promId,tempMaxDate);
+									if(halfQuantity!=null&&halfQuantity>=harfHourWarning){
+										LOGGER.info("触发半小时");
+										flag=1;
+										detailRes="产品:"+item.getProductNameColor()+"("+asin+"),半小时限制："+harfHourWarning+",半小时数量:"+halfQuantity+",";
+										break;
+									}
+								}
+								
+								/*if(afterMap!=null&&afterMap.get(country)!=null&&afterMap.get(country).get(asin)!=null){
+									Map<String,Integer> halfAfter=afterMap.get(country).get(asin);
+									Integer afterQuantity=0;
+									for (String proId: halfAfter.keySet()) {
+										if(promId.equals(proId)||proId.contains(","+promId)||proId.contains(promId+",")||proId.contains(","+promId+",")){
+											afterQuantity+=halfAfter.get(proId);
+										}
+									}
+									
+									Integer beforeQuantity=0;
+									if(beforeMap!=null&&beforeMap.get(country)!=null&&beforeMap.get(country).get(asin)!=null){
+										Map<String,Integer> halfBefore=beforeMap.get(country).get(asin);
+										for (String proId: halfBefore.keySet()) {
+											if(promId.equals(proId)||proId.contains(","+promId)||proId.contains(promId+",")||proId.contains(","+promId+",")){
+												beforeQuantity+=halfBefore.get(proId);
+											}
+										}
+									}
+									
+									if(afterQuantity-beforeQuantity>=harfHourWarning){
+										LOGGER.info("触发半小时");
+										flag=1;
+										detailRes="产品:"+item.getProductNameColor()+"("+asin+"),半小时限制："+harfHourWarning+",数量前:"+beforeQuantity+",数量后："+afterQuantity+",";
+										break;
+										
+									}
+									
+								}*/
+							}catch(Exception e){
+								LOGGER.error("触发半小时异常！",e);
+							}
+						}
+					}
+				}
+				if(flag==1||flag==2){
+					//按国家结束 促销码
+					if(countryMap.get(warning.getCountry())==null){
+						proIds = Sets.newHashSet();
+					}else{
+						proIds = countryMap.get(warning.getCountry());
+					}
+					proIds.add(warning.getPromotionId());
+					countryMap.put(warning.getCountry(), proIds);
+					boolean userFlag=false;
+					if(warning.getUpdateUser()!=null){
+						if("1".equals(sysService.getUser(warning.getUpdateUser().getId()).getDelFlag())){//用户删除
+							userFlag=true;
+						}
+					}
+					User createUser = sysService.getUser((warning.getUpdateUser()==null||userFlag)?"1":warning.getUpdateUser().getId());
+					//按用户发信
+					if(userProMap.get(createUser.getId()+"_"+warning.getCountry())==null){
+						proIdsUser = Sets.newHashSet();
+					}else{
+						proIdsUser = userProMap.get(createUser.getId()+"_"+warning.getCountry());
+					}
+					proIdsUser.add(warning.getPromotionId());
+					userProMap.put(createUser.getId()+"_"+warning.getCountry(), proIdsUser);
+					
+					if(emailMap.get(createUser.getId()+"_"+warning.getCountry())==null){
+						emailMap.put(createUser.getId()+"_"+warning.getCountry(),createUser);
+					}
+					overStaMap.put(createUser.getId()+"_"+warning.getCountry()+","+warning.getPromotionId(), detailRes+(flag==1?"半小时峰值超标.":"累计销量超标."));
+				}
+			}
+			
+			Map<String,String> resMap =Maps.newHashMap(); 
+			//分国家结束促销预警
+			for (Map.Entry<String,Set<String>> entry : countryMap.entrySet()) {  
+			    String countryKey=entry.getKey();
+				LOGGER.info("调用amazon接口start");
+				Map<String,String> curResMap = this.productService.endPromotions(countryKey,entry.getValue());
+				LOGGER.info("调用amazon接口end");
+				if(curResMap!=null&&curResMap.size()>0){
+					resMap.putAll(curResMap);
+					for (Map.Entry<String,String> entryRs : resMap.entrySet()) {  
+					    String tranId=entryRs.getKey();
+						if(entryRs.getValue().startsWith("成功")&&tranId.contains("WEB")){
+							String proCode=promotionsWarningService.getPromotionCode(tranId,countryKey);
+							if(StringUtils.isNotBlank(proCode)){
+								String countryCode=("com".equals(countryKey)?"us":countryKey);
+								String pageUrl="http://50.62.30.1/api2.0/public/magento/codeStatus?app_key=azmv9M3sU2SI2aMK9qMAfF6sB5l2pF96&code="+proCode+"&country="+countryCode+"&status=0";
+								Document  doc=HttpRequest.reqUrl(pageUrl, null, false);
+								if(doc!=null){
+									LOGGER.info("官网code:"+doc.text());
+								}
+							}
+						}
+						this.promotionsWarningService.updateStaAndRes(tranId,countryKey,entryRs.getValue());
+					}
+				}else{
+					LOGGER.info("返回结果为空,"+countryKey+","+entry.getValue().toString());
+				}
+			}
+			
+			
+			//过期发信
+			for (Map.Entry<String,Set<String>> entry : outDateMap.entrySet()) { 
+			    String userId=entry.getKey();
+				if(userId.startsWith("1_")){
+					String country=userId.split("_")[1];
+					List<String> countryList=Lists.newArrayList(country);
+					List<String> roleNameList=Lists.newArrayList("amazoninfo:feedSubmission:");
+				    Map<String,Set<String>> composeMap=sysService.getEmailMap(countryList,roleNameList);
+				    String toEmail="";
+				    String toEmail2="";
+				    if(composeMap.get(country+",")!=null&&composeMap.get(country+",").size()>0){
+				    	for (String set :composeMap.get(country+",")) {
+							toEmail+=set+",";
+							toEmail2=emailAndLoginNameMap.get(set)+"|";
+						}
+				    }	
+				   
+					StringBuffer content = new StringBuffer("以下促销码过期，已经停止监控：<br/>");
+					StringBuffer content1 = new StringBuffer("以下促销码过期，已经停止监控：\n\n");
+					for(String proCode:entry.getValue()){   
+						content.append(proCode+"<br/>");
+						content1.append(proCode+"\n");
+					}
+					noteClaimer(toEmail+"eileen@inateck.com","折扣促销预警过期"+DateUtils.getDateTime(),content.toString());
+					try{
+						WeixinSendMsgUtil.sendTextMsgToUser(toEmail2+"eileen|maik",content1.toString());
+					}catch(Exception e){
+						LOGGER.error("折扣促销预警过期微信发送账号错误异常！",e);
+					}
+				}else{
+					String email =emailMap.get(userId).getEmail();
+					StringBuffer content = new StringBuffer("以下促销码过期，已经停止监控：<br/>");
+					StringBuffer content1 = new StringBuffer("以下促销码过期，已经停止监控：\n\n");
+					for(String proCode:outDateMap.get(userId)){   
+						content.append(proCode+"<br/>");
+						content1.append(proCode+"\n");
+					}
+					noteClaimer(email+",eileen@inateck.com","折扣促销预警过期"+DateUtils.getDateTime(),content.toString());
+					try{
+						WeixinSendMsgUtil.sendTextMsgToUser(emailAndLoginNameMap.get(email)+"|eileen|maik",content1.toString());
+					}catch(Exception e){
+						LOGGER.error("折扣促销预警过期微信发送账号错误异常！",e);
+					}
+				}
+				
+			}
+			
+			
+			StringBuffer enContent = new StringBuffer("Hi All,<br/>&nbsp;&nbsp;&nbsp;&nbsp;以下促销超标，已申请停止，结果如下：<br/>");
+			StringBuffer enContent1 = new StringBuffer("以下促销超标，已申请停止，结果如下：\n\n");
+			boolean enFlag=false;
+			//销量超标发信
+			for (Map.Entry<String,Set<String>> entry : userProMap.entrySet()) { 
+			    String userId=entry.getKey();
+			    Set<String> codeSet=entry.getValue();
+				if(userId.startsWith("1_")){
+					String country=userId.split("_")[1];
+					List<String> countryList=Lists.newArrayList(country);
+					List<String> roleNameList=Lists.newArrayList("amazoninfo:feedSubmission:");
+				    Map<String,Set<String>> composeMap=sysService.getEmailMap(countryList,roleNameList);
+				    String toEmail="";
+				    String toEmail2="";
+				    if(composeMap.get(country+",")!=null&&composeMap.get(country+",").size()>0){
+				    	for (String set :composeMap.get(country+",")) {
+							toEmail+=set+",";
+							toEmail2=emailAndLoginNameMap.get(set)+"|";
+						}
+				    }	
+				    
+				    StringBuffer content = new StringBuffer("Hi "+emailMap.get(userId).getLoginName()+",<br/>&nbsp;&nbsp;&nbsp;&nbsp;以下促销超标，已申请停止，结果如下：<br/>");
+					StringBuffer content1 = new StringBuffer("以下促销超标，已申请停止，结果如下：\n\n");
+					boolean sendFlag=false;
+					for(String proCode:codeSet){
+						if(!resMap.get(proCode).contains("repeat")){
+							sendFlag=true;
+							String overKey=userId+","+proCode;
+							content.append("<b>"+overStaMap.get(overKey)+"</b>"+"Tracking Id为："+"<b>"+proCode+"</b>:"+resMap.get(proCode)+"<br/>");
+							content1.append(overStaMap.get(overKey)+","+"Tracking Id为："+proCode+":"+resMap.get(proCode)+"\n\n");
+						}
+					}
+					if(sendFlag){
+						noteClaimer(toEmail+"eileen@inateck.com,tim@inateck.com","折扣促销超标预警"+DateUtils.getDateTime(),content.toString());
+						try{
+							WeixinSendMsgUtil.sendTextMsgToUser(toEmail2+"eileen|tim|maik",content1.toString());
+						}catch(Exception e){
+							LOGGER.error("促销超标过期微信发送账号错误异常！",e);
+						}
+						
+					}
+					
+				}else{
+					
+					String email =emailMap.get(userId).getEmail();
+					StringBuffer content = new StringBuffer("Hi "+emailMap.get(userId).getLoginName()+",<br/>&nbsp;&nbsp;&nbsp;&nbsp;以下促销超标，已申请停止，结果如下：<br/>");
+					StringBuffer content1 = new StringBuffer("以下促销超标，已申请停止，结果如下：\n\n");
+					boolean emailFlag=false;
+					boolean sendFlag=false;
+					String country=userId.split("_")[1];
+					for(String proCode:userProMap.get(userId)){
+						if(!resMap.get(proCode).contains("repeat")){
+							sendFlag=true;
+							String overKey=userId+","+proCode;
+							content.append("<b>"+overStaMap.get(overKey)+"</b>"+","+("com".equals(country)?"us":country)+",Tracking Id为："+"<b>"+proCode+"</b>:"+resMap.get(proCode)+"<br/>");
+							content1.append(overStaMap.get(overKey)+","+("com".equals(country)?"us":country)+",Tracking Id为："+proCode+":"+resMap.get(proCode)+"\n\n");
+							if(resMap.get(proCode).contains("请手动关闭")||resMap.get(proCode).contains("请您自行核实")){
+								emailFlag=true;
+							}
+							if("ca,com,uk".contains(country)){
+								enFlag=true;
+								enContent.append("<b>"+overStaMap.get(overKey)+"</b>"+","+("com".equals(country)?"us":country)+",Tracking Id为："+"<b>"+proCode+"</b>:"+resMap.get(proCode)+"<br/>");
+								enContent1.append(overStaMap.get(overKey)+","+("com".equals(country)?"us":country)+",Tracking Id为："+proCode+":"+resMap.get(proCode)+"\n\n");
+							}
+						}
+						
+					}
+					if(sendFlag){
+						if(emailFlag){
+							try{
+								//String country=userId.split("_")[1];
+								List<String> countryList=Lists.newArrayList(country);
+								List<String> roleNameList=Lists.newArrayList("amazoninfo:feedSubmission:");
+							    Map<String,Set<String>> composeMap=sysService.getEmailMap(countryList,roleNameList);
+							    String toEmail="";
+							    String toEmail2="";
+							    if(composeMap.get(country+",")!=null&&composeMap.get(country+",").size()>0){
+							    	for (String set :composeMap.get(country+",")) {
+										toEmail+=set+",";
+										toEmail2=emailAndLoginNameMap.get(set)+"|";
+									}
+							    }	
+								noteClaimer(toEmail+"eileen@inateck.com,tim@inateck.com","折扣促销超标预警"+DateUtils.getDateTime(),content.toString());
+							    WeixinSendMsgUtil.sendTextMsgToUser(toEmail2+"eileen|tim|maik",content1.toString());
+							}catch(Exception e){
+								LOGGER.error("促销超标过期异常！",e);
+								try{
+									WeixinSendMsgUtil.sendTextMsgToUser(emailAndLoginNameMap.get(email)+"|eileen|tim|maik",content1.toString());
+								}catch(Exception ex){
+									LOGGER.error("促销超标过期微信发送账号错误异常！",ex);
+								}
+							}
+						}else{
+							noteClaimer(email+",eileen@inateck.com,tim@inateck.com","折扣促销超标预警"+DateUtils.getDateTime(),content.toString());
+							try{
+								WeixinSendMsgUtil.sendTextMsgToUser(emailAndLoginNameMap.get(email)+"|eileen|tim|maik",content1.toString());
+							}catch(Exception e){
+								LOGGER.error("促销超标过期微信发送账号错误异常！",e);
+							}
+						}
+					}
+					
+				}
+				
+			}
+			/*try{
+				if(enFlag){
+					noteClaimer("helen@inateck.com,lucille@inateck.com,eileen@inateck.com","英语市场折扣促销超标预警"+DateUtils.getDateTime(),enContent.toString());
+				    WeixinSendMsgUtil.sendTextMsgToUser("helen|lucille",enContent1.toString());
+				}
+				
+			}catch(Exception e){
+				LOGGER.error("英语国家促销超标过期微信发送账号错误异常！",e);
+			}*/
+			LOGGER.info("促销码监控扫描结束！");
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOGGER.error("促销码监控扫描异常结束！",e);
+		
+		}
+	}
+	
+	
+	
+	//0:帖子预警
+	public  void noteClaimer(final String address,final String subject,final String content){
+		new Thread(){
+			@Override
+			public void run() {
+				try{
+					MailInfo mailInfo = new MailInfo(address, subject, new Date());
+					mailInfo.setContent(HtmlUtils.htmlUnescape(content));
+					boolean rs = mailManager.send(mailInfo);
+					int i = 0 ;
+					while(!rs && i<3){
+						Thread.sleep(5000);
+						rs = mailManager.send(mailInfo);
+						i++;
+					}
+					if(!rs){
+							LOGGER.error("促销折扣预警发送失败-->"+content);
+					}
+					
+				} catch (Exception e) {
+					LOGGER.error("促销折扣预警邮件:"+e.getMessage());
+				}
+			}
+		}.start();		
+	} 
+	
+	public static Date localDateToOtherCountryDate(Date date,String country) {
+			DateFormat sdf = AmazonOrder.getFormat();
+			if("de,it,es,fr".contains(country)){
+				sdf.setTimeZone(AmazonWSConfig.get("de").getTimeZone());
+			}else{
+				sdf.setTimeZone(AmazonWSConfig.get(country).getTimeZone());
+			}
+			String time = sdf.format(date);
+			sdf.setTimeZone(TimeZone.getDefault());
+			try {
+				return sdf.parse(time);
+			} catch (ParseException e) {}
+			return null;
+	}
+	
+	//筛查疑似恶意订单（数量大于等于100）
+	public void sendOrderNoticeMsg(List<AmazonOrder> amazonOrders) {
+		//Map<country, message>
+		LOGGER.info("筛查疑似恶意订单开始...");
+		try {
+			Map<String, List<String>> countryMsgMap = Maps.newHashMap();
+			boolean flag = false;
+			for (AmazonOrder amazonOrder : amazonOrders) {
+				if ("Pending".equals(amazonOrder.getOrderStatus())) {
+					for (AmazonOrderItem item : amazonOrder.getItems()) {
+						if (item.getQuantityOrdered() >= 100 && (amazonOrder.getNumberOfItemsShipped()==null || amazonOrder.getNumberOfItemsShipped() == 0)
+								&& !orderIds.contains(amazonOrder.getAmazonOrderId())) {
+							flag = true;
+							List<String> msg = countryMsgMap.get(amazonOrder.getSalesChannel());
+							if (msg == null) {
+								msg = Lists.newArrayList();
+								countryMsgMap.put(amazonOrder.getSalesChannel(), msg);
+							}
+							msg.add( "订单号：" + amazonOrder.getAmazonOrderId()
+									+ "\nsku：" + item.getSellersku()
+									+ "\n订单数量：" + item.getQuantityOrdered() + "\n\n");
+							orderIds.add(amazonOrder.getAmazonOrderId());
+						}
+					}
+				}
+			}
+			if (flag) {	//存在大订单
+				LOGGER.info("捕获到疑似恶意订单...");
+				Map<String, String> emailAndLoginNameMap = sysService.findLoginNameByEmail();
+				for (Map.Entry<String, List<String>> entry : countryMsgMap.entrySet()) { 
+				    String key =entry.getKey();
+					List<String> msgList = entry.getValue();
+					if (msgList.size() > 0) {
+						String country = key.substring(key.lastIndexOf(".") + 1);
+						String countryStr = countryNameMap.get(country);
+						//组合消息内容
+						String content = "";
+						StringBuffer buf= new StringBuffer("Hi All,Amazon"+countryStr+"监控到数量大于100的大订单,详情如下：\n消息时间："
+								+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"\n\n");
+						for (int i = 0; i < msgList.size(); i++) {
+							buf.append(msgList.get(i));
+						}
+						content=buf.toString();
+						List<String> countryList = Lists.newArrayList(country);
+						List<String> roleNameList = new ArrayList<String>();
+						roleNameList.add("amazoninfo:feedSubmission:");
+						Map<String,Set<String>> rs = sysService.getEmailMap(countryList, roleNameList);
+						String userStr = "";
+						StringBuffer buff= new StringBuffer();
+						//组合发送人员名单
+						for (Map.Entry<String,Set<String>> entryRs : rs.entrySet()) { 
+							Set<String> set =entryRs.getValue();
+							for (String str : set) {
+								String loginName = emailAndLoginNameMap.get(str);
+								if (loginName != null) {
+									buff.append(loginName + "|");
+								}
+							}
+						}
+						userStr=buff.toString();
+						LOGGER.info("疑似恶意订单通知人员：" + userStr);
+						try {
+							if (StringUtils.isNotEmpty(userStr)) {
+								//发送给对应的产品上架员&系统开发部(id为7)
+								WeixinSendMsgUtil.sendTextMsg(WeixinSendMsgUtil.getToken(), "maik|"+userStr, "7", null, "4", content, "0");
+							}
+						} catch (Exception e) {
+							LOGGER.error("调用微信接口发送异常订单通知失败", e);
+						}
+					}
+				}
+			} else {
+				LOGGER.info("未发现疑似恶意订单...");
+			}
+		} catch (Exception e) {
+			LOGGER.error("筛查疑似恶意订单出现异常", e);
+		}
+	}
+	
+	public void setOrderItemPromotionsCode(){
+		Map<String,Map<String,String>> map=Maps.newHashMap();//国家-trackId-code
+		for(int i = 0;i <CountryType.values().length;i++){
+			CountryType country = CountryType.values()[i];
+			try{
+				scannerData(country,map);
+			}catch(Exception e) {
+				LOGGER.error(country+"-"+e.getMessage(),e);
+			}
+		}
+		if(map!=null&&map.size()>0){
+			orderService.updatePromotionsCode(map);
+		}
+	}
+	
+	public void scannerData(CountryType country,Map<String,Map<String,String>> map){
+		WebClient  client = LoginUtil.register(country.getName(),false);
+		if(client==null){
+			LOGGER.error("login error"+country.getName());
+			throw new RuntimeException("login error"+country.getName());
+		}
+		WebRequest request = null;
+		try {
+			Map<String,String> results = new LinkedHashMap<String,String>();
+			request = new WebRequest(new URL("https://sellercentral.amazon."+country.getSuffix()+"/hz/promotions/manage"), HttpMethod.POST);
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new NameValuePair("searchType", "STATUS"));
+			params.add(new NameValuePair("statusSearchType", "ACTIVE"));
+			request.setRequestParameters(params);
+			int times1=0;
+			int count = findActivePromotionId(client,request,results,times1);
+			if(count>25){
+				int i =0;
+				while (count!= results.size()&& i<10) {
+					results.clear();
+					findPromotionId(client, request, results);
+					i++;
+				}
+			}
+			LOGGER.info("count:"+results.size()+"!!!"+results);
+			
+			int num1=0;
+			
+			if(results.size()>0){
+				for (Entry<String, String> entry : results.entrySet()) {
+					AmazonPromotionsWarning promotion=getPromotionDetails(client,country.getName(), entry.getKey(),entry.getValue(),num1);
+					if(promotion!=null){
+						Map<String,String> countryMap=map.get("com.inateck".equals(country.getName())?"com":country.getName());
+						if(countryMap==null){
+							countryMap=Maps.newHashMap();
+							map.put("com.inateck".equals(country.getName())?"com":country.getName(), countryMap);
+						}
+						countryMap.put(entry.getKey(), promotion.getClaimCode());
+					}
+				}	
+			}
+		
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(),e);
+		}finally{
+			LoginUtil.closeClient(client, country.getSuffix());
+			AmzLoginPool.returnClient(country.getName(), client);
+		}
+	}
+	
+	private  AmazonPromotionsWarning getPromotionDetails(WebClient webClient,String country,String trackingId,String url,int num){
+		try{
+			AmazonPromotionsWarning filledAmazonPromotion = new AmazonPromotionsWarning();
+			if("com.inateck".equals(country)){
+				filledAmazonPromotion.setCountry("com");
+			}else{
+				filledAmazonPromotion.setCountry(country);
+			}
+			filledAmazonPromotion.setPromotionId(trackingId);
+			HtmlPage htmlPage = webClient.getPage("https://sellercentral.amazon."+CountryType.getCountryTypeByEsayName(country).getSuffix()+url);
+			DomText domText1 =null;
+			try{
+				if (htmlPage.getByXPath("//*[@id=\"claimCodeText\"]/text()").size() > 0) {
+		            domText1 = (DomText) htmlPage.getByXPath("//*[@id=\"claimCodeText\"]/text()").get(0);
+		            filledAmazonPromotion.setClaimCode(domText1.getTextContent().trim());
+		            return filledAmazonPromotion;
+		        }
+			}catch(Exception e){
+				LOGGER.error("error",e);
+			}
+			return null;
+		}catch(Exception e){
+			   LOGGER.error("error",e);
+	    	   try {
+					Thread.sleep(60000);
+	    	   } catch (InterruptedException e1) {}
+	    	   if(num<10){
+	    		   num++;
+	    		   return getPromotionDetails(webClient, country, trackingId,url,num);
+	    	   }else{
+	    		   return null;
+	    	   }
+		       
+		}
+	}
+	
+	
+	private int findActivePromotionId(WebClient client,WebRequest request ,Map<String,String> result,int times){
+		try{
+			HtmlPage page = client.getPage(request);
+			Document doc = Jsoup.parse(page.asXml());
+			Elements eles = doc.getElementsByClass("mt-link-content");
+			for (Iterator<Element> iterator = eles.iterator(); iterator.hasNext();) {
+				Element ele = (Element) iterator.next();
+				String href=ele.attr("href");
+				String trackId=URLDecoder.decode(href.split("trackingId=")[1], "utf-8");
+				result.put(trackId,href);
+			}
+			Element num = doc.getElementById("mt-header-count-value");
+			Integer count = 0 ;
+			if(num!=null){
+				try {
+					count = Integer.parseInt(num.text());
+				} catch (Exception e) {}
+			}
+			return count;
+		}catch(Exception e){
+			LOGGER.error(e.getMessage(),e);
+			try {
+				Thread.sleep(60000);
+			} catch (InterruptedException e1) {}
+			if(times<10){
+				times++;
+				return findActivePromotionId(client,request,result,times);
+			}else{
+				return 0;
+			}
+			
+		}
+	}
+	
+	private void findPromotionId(WebClient client,WebRequest request ,Map<String,String> result){
+		try{
+			HtmlPage page = client.getPage(request);
+			Document doc = Jsoup.parse(page.asXml());
+			Elements eles = doc.getElementsByClass("mt-link-content");
+			for (Iterator<Element> iterator = eles.iterator(); iterator.hasNext();) {
+				Element ele = (Element) iterator.next();
+				String href=ele.attr("href");
+				String trackId=URLDecoder.decode(href.split("trackingId=")[1], "utf-8");
+				result.put(trackId,href);
+			}
+			Element num = doc.getElementById("mt-header-count-value");
+			if(num!=null){
+				Integer count = 0 ;
+				try {
+					count = Integer.parseInt(num.text());
+				} catch (Exception e) {}
+				if(count>25){
+					String startDate = "";
+					startDate = doc.getElementsByClass("mt-text-content").last().text().trim();
+					startDate = startDate.split(" ")[0];
+					Elements st = doc.getElementsByAttributeValue("name", "startSearchDate");
+					String start = "";
+					if(st!=null&&st.get(0)!=null){
+						start = st.get(0).val();
+					}
+					if(startDate.equals(start)){
+						LOGGER.error("折扣统计："+request.getUrl().toString()+":::"+start+"超过25个了！！！");
+						throw new RuntimeException("折扣统计："+request.getUrl().toString()+":::"+start+"超过25个了！！！");
+					}
+					List<NameValuePair> params = new ArrayList<NameValuePair>();
+					params.add(new NameValuePair("searchType", "DATE"));
+					params.add(new NameValuePair("dateSearchType", "END_DATE"));
+					params.add(new NameValuePair("startSearchDate",startDate));
+					params.add(new NameValuePair("endSearchDate","01/01/2050"));
+					request.setRequestParameters(params);
+					findPromotionId(client,request,result);
+				}
+			}
+		}catch(Exception e){
+			LOGGER.error(e.getMessage(),e);
+			try {
+				Thread.sleep(60000);
+			} catch (InterruptedException e1) {}
+		}
+	}
+	
+}

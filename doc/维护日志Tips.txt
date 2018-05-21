@@ -1,0 +1,367 @@
+
+//校验金额
+
+SELECT SUM(b.`quantity_lading`*b.`item_price`),a.`no_deposit_amount` FROM lc_psi_lading_bill AS a ,lc_psi_lading_bill_item AS b 
+WHERE a.id=b.`lading_bill_id` AND a.`bill_sta`<>'2' AND b.`del_flag`='0' GROUP BY a.`id` HAVING SUM(b.`quantity_lading`*b.`item_price`)<>a.`no_deposit_amount`
+
+SELECT a.`order_no`,a.`order_sta`,SUM(b.`item_price`*b.`quantity_ordered`),a.`order_total` FROM lc_psi_purchase_order AS a,lc_psi_purchase_order_item AS b 
+WHERE a.id=b.`purchase_order_id` AND a.`order_sta`<>'6' AND b.`del_flag`='0' GROUP BY a.`id` HAVING SUM(b.`item_price`*b.`quantity_ordered`)<>a.`order_total`
+
+//判断付款完毕但状态没完毕
+SELECT a.* FROM lc_psi_purchase_order AS a  WHERE  (a.`payment_amount`+a.`deposit_amount`)=a.`order_total` AND a.`order_sta` <>'5'
+
+//备品大于1箱或者大货散箱+备品数大于1箱的
+
+SELECT (CASE WHEN a.`color_code`='' THEN a.`product_name` ELSE CONCAT(a.`product_name`,'_',a.`color_code`) END) AS proName,a.`sku`, a.`new_quantity`,a.`spares_quantity`,b.`pack_quantity` FROM psi_inventory AS a ,psi_product AS b
+ WHERE a.`product_id`=b.`id` AND b.`pack_quantity` <>1 AND (( a.`new_quantity`%b.`pack_quantity`>0 AND  (a.`new_quantity`%b.`pack_quantity`+a.`spares_quantity`)/b.`pack_quantity`>1) OR a.`spares_quantity`/b.`pack_quantity`>1)
+
+//校验(产品)库存日志与及时库存数量 new     
+SELECT b.`warehouse_id`,b.sku,SUM(b.`quantity`),a.`new_quantity` FROM psi_inventory_revision_log AS b,psi_inventory AS a WHERE b.`warehouse_id`='21' AND a.`warehouse_id`=b.`warehouse_id` AND a.`sku`=b.`sku`
+AND b.`data_type`='new'  GROUP BY b.`sku` HAVING SUM(b.`quantity`)>0 AND a.`new_quantity`<>SUM(b.`quantity`)
+
+//校验(配件)库存日志与及时库存数量 
+SELECT b.`parts_name`,SUM(b.`quantity`), a.`po_frozen` FROM psi_parts_inventory_log AS b,psi_parts_inventory AS a WHERE  a.`parts_id`=b.`parts_id`
+AND b.`data_type`='poFrozen'  GROUP BY b.`parts_id` HAVING  a.`po_frozen`<>SUM(b.`quantity`);
+
+SELECT b.`parts_name`,SUM(b.`quantity`), a.`po_not_frozen` FROM psi_parts_inventory_log AS b,psi_parts_inventory AS a WHERE  a.`parts_id`=b.`parts_id`
+AND b.`data_type`='poNotFrozen'  GROUP BY b.`parts_id` HAVING  a.`po_not_frozen`<>SUM(b.`quantity`);
+
+SELECT b.`parts_name`,SUM(b.`quantity`), a.`stock_frozen` FROM psi_parts_inventory_log AS b,psi_parts_inventory AS a WHERE  a.`parts_id`=b.`parts_id`
+AND b.`data_type`='stockFrozen'  GROUP BY b.`parts_id` HAVING  a.`stock_frozen`<>SUM(b.`quantity`);
+
+SELECT b.`parts_name`,SUM(b.`quantity`), a.`stock_not_frozen` FROM psi_parts_inventory_log AS b,psi_parts_inventory AS a WHERE  a.`parts_id`=b.`parts_id`
+AND b.`data_type`='stockNotFrozen'  GROUP BY b.`parts_id` HAVING  a.`stock_not_frozen`<>SUM(b.`quantity`)
+
+
+//品牌更改
+UPDATE psi_barcode AS a SET a.`product_name`=REPLACE(a.`product_name`,'Inateck','Tomtoc') WHERE  a.`psi_product`>419 AND a.`psi_product`<450 AND a.`psi_product` NOT IN (447,448);
+UPDATE psi_product AS a SET a.`brand`='Tomtoc' WHERE  a.`brand`='Inateck' AND a.`id`>419 AND a.`id`<450 AND a.`id` NOT IN (447,448);
+UPDATE psi_product_attribute AS a SET a.`product_name`= REPLACE(a.`product_name`,'Inateck','Tomtoc') WHERE a.`product_id`>419 AND a.`product_id`<450 AND a.`product_id` NOT IN (447,448);
+UPDATE psi_product_eliminate AS a SET a.`product_name`=REPLACE(a.`product_name`,'Inateck','Tomtoc') WHERE a.`product_id`>419 AND a.`product_id`<450 AND a.`product_id` NOT IN (447,448);
+
+//产品改名字start(品牌、model、颜色)
+/* 产品基本信息 */
+UPDATE psi_product AS a SET a.`model`='A13-C02G',a.`brand`='Tomtoc' WHERE a.`model`='A13-C01G' and a.`brand`='Tomtoc' ;(此表颜色和国家为拼接的，改是留意，尽量手动改)
+UPDATE psi_vat_invoice_info AS a SET a.`product_name`='Tomtoc A13-C02G' WHERE a.`product_name`='Tomtoc A13-C01G'
+UPDATE psi_sku AS a SET a.`product_name`='Tomtoc A13-C02G',a.`color`='gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color`='gray' ;
+UPDATE psi_barcode AS c SET c.`product_name`='Tomtoc A13-C02G',c.`product_color`='gray' WHERE  c.`product_name`='Tomtoc A13-C01G' AND c.`product_color`='gray';
+UPDATE psi_product_attribute AS a SET a.`product_name`='Tomtoc A13-C02G',a.`color`='gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color`='gray';
+UPDATE psi_product_eliminate AS a SET a.`product_name`='Tomtoc A13-C02G',a.`color`='gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color`='gray';
+
+UPDATE psi_product_tiered_price_log AS a SET a.`product_name_color`='Tomtoc A13-C02G_gray' WHERE a.`product_name_color`='Tomtoc A13-C01G_gray' ;
+UPDATE amazoninfo_aws_adversting AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray' ;
+
+
+/*订单提单运单*/
+UPDATE psi_purchase_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE psi_his_purchase_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'   WHERE a.`product_name`='Tomtoc A13-C01G'  AND a.`color_code`='gray';
+UPDATE psi_lading_bill_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G' WHERE a.`product_name`='Tomtoc A13-C01G'  AND a.`color_code`='gray';
+UPDATE psi_transport_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+
+
+/* ！！！！！！！！！！！！！！！！！！！！！！如果是第一次下单的新品,要记得更改运单表等(psi_lading_bill_item,psi_transport_order_item,psi_inventory,psi_inventory_revision_log,psi_inventory_in_item,psi_inventory_out_item)里的sku  */
+
+UPDATE lc_psi_purchase_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE lc_psi_his_purchase_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'   WHERE a.`product_name`='Tomtoc A13-C01G'  AND a.`color_code`='gray';
+UPDATE lc_psi_lading_bill_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G' WHERE a.`product_name`='Tomtoc A13-C01G'  AND a.`color_code`='gray';
+UPDATE lc_psi_transport_order_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE lc_psi_purchase_order_delivery_date AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+
+
+/*库存*/
+UPDATE psi_inventory AS a  SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE psi_inventory_in_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE psi_inventory_out_item AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE psi_inventory_revision_log AS a SET a.`color_code`='gray',a.`product_name`='Tomtoc A13-C02G'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+
+
+
+/*预测订单、配件出库、sku改变、每天库存记录、断货记录*/
+UPDATE psi_forecast_transport_order_item AS a SET a.`product_name`='Tomtoc A13-C02G',a.`color_code`= 'gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE psi_forecast_order_item AS a SET a.`product_name`='Tomtoc A13-C02G', a.`color_code`='gray'  WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color_code`='gray';
+UPDATE  psi_parts_inventory_out AS a  SET a.`product_name`='Tomtoc A13-C02G', a.`color`='gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`color`='gray';
+UPDATE  psi_sku_change_bill AS a  SET a.`product_name`='Tomtoc A13-C02G',a.`product_color`='gray' WHERE a.`product_name`='Tomtoc A13-C01G' AND a.`product_color`='gray';
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray' ;
+UPDATE  psi_out_of_stock_info AS a  SET a.`product_name`='Tomtoc A13-C02G',a.`color`='gray' WHERE a.`color`='gray' AND a.`product_name`='Tomtoc A13-C01G';
+
+
+/*亚马逊*/
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray' ;
+UPDATE amazoninfo_report_month_type AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray' ;
+UPDATE amazoninfo_pan_eu AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray' ;
+
+UPDATE  amazoninfo_catalog_rank AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_posts_change AS a SET a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_refund_item AS a SET a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_posts_detail AS a SET a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE amazoninfo_unline_orderitem AS a SET a.product_name='Tomtoc A13-C02G',a.`color`='gray' WHERE a.product_name='Tomtoc A13-C01G' AND a.`color`='gray';
+UPDATE amazoninfo_orderitem AS a SET a.product_name='Tomtoc A13-C02G',a.`color`='gray' WHERE a.product_name='Tomtoc A13-C01G' AND a.`color`='gray';
+UPDATE amazoninfo_session_monitor AS a SET a.product_name='Tomtoc A13-C02G',a.`color`='gray' WHERE a.product_name='Tomtoc A13-C01G' AND a.`color`='gray';
+
+
+UPDATE custom_email_manager  AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.`product_name`='Tomtoc A13-C01G_gray';
+UPDATE custom_product_problem  AS a SET  a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE custom_event_manager  AS a SET  a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE amazoninfo_sales_forecast AS a SET  a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_sales_forecast_month AS a SET  a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE amazoninfo_sale_report AS a SET a.product_name='Tomtoc A13-C02G',a.`color`='gray' WHERE a.product_name='Tomtoc A13-C01G' AND a.`color`='gray';
+UPDATE amazoninfo_buy_comment AS a SET a.product_name='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomtoc A13-C02G_gray' WHERE a.product_name_color='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomtoc A13-C02G_gray' WHERE a.product_name_color='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_vendor_orderitem AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_product_price AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_promotions_warning_item AS a SET a.`product_name_color`='Tomtoc A13-C02G_gray' WHERE a.product_name_color='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_product_sale_price AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE psi_product_avg_price AS a SET SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE psi_product_transport_rate AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+UPDATE amazoninfo_removal_orderitem AS a SET a.`product_name`='Tomtoc A13-C02G_gray' WHERE a.product_name='Tomtoc A13-C01G_gray';
+
+UPDATE amazoninfo_custom_filter t 
+SET t.`pn1`=REPLACE(t.`pn1`,'Tomtoc A13-C01G_gray,','Tomtoc A13-C02G_gray,'),
+t.`pn1`=REPLACE(t.`pn1`,',Tomtoc A13-C01G_gray,',',Tomtoc A13-C02G_gray,'),
+t.`pn11`=REPLACE(t.`pn11`,'Tomtoc A13-C01G_gray,','Tomtoc A13-C02G_gray,'),
+t.`pn11`=REPLACE(t.`pn11`,',Tomtoc A13-C01G_gray,',',Tomtoc A13-C02G_gray,')
+WHERE t.`pn1` LIKE '%Tomtoc A13-C01G_gray%' OR t.`pn11` LIKE '%Tomtoc A13-C01G_gray%';
+UPDATE amazoninfo_custom_filter t 
+SET t.`pn1`=REPLACE(t.`pn1`,'Tomtoc A13-C01G_gray,',',Tomtoc A13-C02G_gray'),
+t.`pn11`=REPLACE(t.`pn11`,'Tomtoc A13-C01G_gray,',',Tomtoc A13-C02G_gray')
+WHERE t.`pn1` LIKE '%Tomtoc A13-C01G_gray' OR t.`pn11` LIKE '%Tomtoc A13-C01G_gray';
+
+//产品改名字end
+
+
+
+
+
+
+//配件仓库日志，添加处：   
+1、根据订单下单
+2、自建配件订单
+3、配件收货
+4、配件出库
+5、配件库存转换
+
+//手动修改产品型号
+1、修改psi_barcode
+UPDATE psi_barcode AS b SET b.`product_name`='Inateck CA1001' WHERE b.`product_name` = 'Inateck CA3002' AND b.`psi_product`='172'
+2、修改产品
+UPDATE psi_product AS a SET a.`model`='CA1001' WHERE a.`model`='CA3002' AND a.`id`='172'
+3、修改 psi_sku、采购订单、提单、运单等
+
+
+//同产品按电源不同，划分装箱数
+
+1、forecastOrderBossReview.jsp、forecastOrderReview.jsp、forecastOrderView.jsp、forecastOrderEdit.jsp
+2、psiTransportOrderAeAndExProduct.jsp、psiTransportOrderOeProduct.jsp、psiTransportOrderAdd.jsp
+3、purchaseOrderEditOfficial.jsp、purchaseOrderEdit.jsp
+
+4、PsiInventoryService.getPackQuantity、  ForecastOrderItem.getPackQuantity  、PsiProduct.getPackNumsByCountry
+
+
+//产品根据国家不同，拆分产品DL1001，DL1002为不同的产品。例：DL1002  
+//重新添加产品、绑定sku，设置价格。
+//订单 psi_purchase_order_item   lc_ psi_purchase_order_item
+//运单 psi_transport_order_item  lc_psi_transport_order_item
+//库存 psi_inventory  psi_inventory_in_item  psi_inventory_out_item  psi_inventory_revision_log
+//预测采购订单psi_forecast_order_item
+//分批收货 psi_purchase_order_delivery_date
+UPDATE psi_purchase_order_item AS a SET a.`product_name`='Tomons DL1001EU',a.`product_id`='265' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`country_code` IN ('de','fr','it','es');
+UPDATE psi_purchase_order_item AS a SET a.`product_name`='Tomons DL1001UK',a.`product_id`='266' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`country_code` IN ('uk');
+UPDATE psi_purchase_order_item AS a SET a.`product_name`='Tomons DL1001JP',a.`product_id`='268' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`country_code` IN ('jp');
+UPDATE psi_purchase_order_item AS a SET a.`product_name`='Tomons DL1001US',a.`product_id`='267' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`country_code` IN ('com','ca','mx');
+
+//提单psi_lading_bill_item   lc_psi_lading_bill_item
+//预测运单psi_forecast_transport_order_item
+UPDATE psi_lading_bill_item AS a SET a.`product_name`='Tomons DL1001EU' WHERE a.`product_name`='Tomons DL1001' AND a.`country_code` IN ('de','fr','it','es');
+UPDATE psi_lading_bill_item AS a SET a.`product_name`='Tomons DL1001UK' WHERE a.`product_name`='Tomons DL1001' AND a.`country_code` IN ('uk');
+UPDATE psi_lading_bill_item AS a SET a.`product_name`='Tomons DL1001JP' WHERE a.`product_name`='Tomons DL1001' AND a.`country_code` IN ('jp');
+UPDATE psi_lading_bill_item AS a SET a.`product_name`='Tomons DL1001US' WHERE a.`product_name`='Tomons DL1001' AND a.`country_code` IN ('com','ca','mx');
+//无配件不需修改psi_parts_inventory_out配件配送表
+//sku转换记录
+UPDATE psi_sku_change_bill AS a SET a.`product_name`='Tomons DL1001EU',a.`product_id`='265' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`product_country` IN ('de','fr','it','es');
+UPDATE psi_sku_change_bill AS a SET a.`product_name`='Tomons DL1001UK',a.`product_id`='266' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`product_country` IN ('uk');
+UPDATE psi_sku_change_bill AS a SET a.`product_name`='Tomons DL1001JP',a.`product_id`='268' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`product_country` IN ('jp');
+UPDATE psi_sku_change_bill AS a SET a.`product_name`='Tomons DL1001US',a.`product_id`='267' WHERE a.`product_name`='Tomons DL1001' AND a.`product_id`='179' AND a.`product_country` IN ('com','ca','mx');
+
+
+//每天库存记录psi_product_in_stock      amazoninfo_catalog_rank  amazoninfo_posts_change  amazoninfo_posts_detail  custom_email_manager  custom_product_problem  custom_event_manager
+amazoninfo_sales_forecast  
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001EU_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('de','fr','it','es');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001UK_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('uk');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001JP_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('jp');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001US_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001EU_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('de','fr','it','es');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001UK_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('uk');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001JP_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('jp');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001US_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001EU_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('de','fr','it','es');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001UK_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('uk');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001JP_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('jp');
+UPDATE psi_product_in_stock AS a SET a.`product_name`='Tomons DL1001US_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('com','ca','mx');
+// amazoninfo_sales_forecast_month(有id)
+UPDATE amazoninfo_sales_forecast_month AS a SET a.`product_name`='Inateck DS1001JP_black',a.`product_id`='297' WHERE a.`product_name`='Inateck DS1001_black'  AND a.`country` IN ('jp') AND a.`product_id`='195';
+
+
+//每天断货查询 psi_out_of_stock_info  线下订单 amazoninfo_unline_orderitem  amazoninfo_sale_report
+UPDATE psi_out_of_stock_info AS a SET a.`product_name`='Tomons DL1001EU' WHERE a.`product_name`='Tomons DL1001'  AND a.`country` IN ('de','fr','it','es');
+UPDATE psi_out_of_stock_info AS a SET a.`product_name`='Tomons DL1001UK' WHERE a.`product_name`='Tomons DL1001'  AND a.`country` IN ('uk');
+UPDATE psi_out_of_stock_info AS a SET a.`product_name`='Tomons DL1001JP' WHERE a.`product_name`='Tomons DL1001'  AND a.`country` IN ('jp');
+UPDATE psi_out_of_stock_info AS a SET a.`product_name`='Tomons DL1001US' WHERE a.`product_name`='Tomons DL1001'  AND a.`country` IN ('com','ca','mx');
+
+//亚马逊订单item，没有crosssku的
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001EU_white' WHERE a.`sellersku` IN ('55-DL1001W-DE','55-DL1001WNEW1-DE','55-DL1001W-DELOCAL','55-DL1001W-FR','55-DL1001WNEW1-FR','55-DL1001W-IT','55-DL1001WNEW1-IT','55-DL1001W-ES','55-DL1001WNEW1-ES');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001UK_white' WHERE a.`sellersku` IN ('55-DL1001W-UK','55-DL1001WNEW1-UK');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001JP_white' WHERE a.`sellersku` IN ('55-DL1001W-JP','55-DL1001WNEW1-JP');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001US_white' WHERE a.`sellersku` IN ('55-DL1001W-US','55-DL1001WNEW1-US','55-DL1001W-CA','55-DL1001WNEW1-CA','55-DL1001W-MX','55-DL1001WNEW1-MX');
+
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001EU_black' WHERE a.`sellersku` IN ('55-DL1001B-DE','55-DL1001BNEW1-DE','55-DL1001B-DELOCAL','55-DL1001B-FR','55-DL1001BNEW1-FR','55-DL1001B-IT','55-DL1001BNEW1-IT','55-DL1001B-ES','55-DL1001BNEW1-ES');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001UK_black' WHERE a.`sellersku` IN ('55-DL1001B-UK','55-DL1001BNEW1-UK');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001JP_black' WHERE a.`sellersku` IN ('55-DL1001B-JP','55-DL1001BNEW1-JP');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001US_black' WHERE a.`sellersku` IN ('55-DL1001B-US','55-DL1001BNEW1-US','55-DL1001B-CA','55-DL1001BNEW1-CA','55-DL1001B-MX','55-DL1001BNEW1-MX');
+
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001EU_green' WHERE a.`sellersku` IN ('55-DL1001G-DE','55-DL1001GNEW1-DE','55-DL1001G-DELOCAL','55-DL1001G-FR','55-DL1001GNEW1-FR','55-DL1001G-IT','55-DL1001GNEW1-IT','55-DL1001G-ES','55-DL1001GNEW1-ES');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001UK_green' WHERE a.`sellersku` IN ('55-DL1001G-UK','55-DL1001GNEW1-UK');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001JP_green' WHERE a.`sellersku` IN ('55-DL1001G-JP','55-DL1001GNEW1-JP');
+UPDATE amazoninfo_orderitem AS a SET a.`product_name`='Tomons DL1001US_green' WHERE a.`sellersku` IN ('55-DL1001G-US','55-DL1001GNEW1-US','55-DL1001G-CA','55-DL1001GNEW1-CA','55-DL1001G-MX','55-DL1001GNEW1-MX');
+
+
+
+//折扣预警amazoninfo_discount_warning_item
+
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001EU_white' WHERE a.`sku` IN ('55-DL1001W-DE','55-DL1001WNEW1-DE','55-DL1001W-DELOCAL','55-DL1001W-FR','55-DL1001WNEW1-FR','55-DL1001W-IT','55-DL1001WNEW1-IT','55-DL1001W-ES','55-DL1001WNEW1-ES');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001UK_white' WHERE a.`sku` IN ('55-DL1001W-UK','55-DL1001WNEW1-UK');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001JP_white' WHERE a.`sku` IN ('55-DL1001W-JP','55-DL1001WNEW1-JP');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001US_white' WHERE a.`sku` IN ('55-DL1001W-US','55-DL1001WNEW1-US','55-DL1001W-CA','55-DL1001WNEW1-CA','55-DL1001W-MX','55-DL1001WNEW1-MX');
+
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001EU_black' WHERE a.`sku` IN ('55-DL1001B-DE','55-DL1001BNEW1-DE','55-DL1001B-DELOCAL','55-DL1001B-FR','55-DL1001BNEW1-FR','55-DL1001B-IT','55-DL1001BNEW1-IT','55-DL1001B-ES','55-DL1001BNEW1-ES');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001UK_black' WHERE a.`sku` IN ('55-DL1001B-UK','55-DL1001BNEW1-UK');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001JP_black' WHERE a.`sku` IN ('55-DL1001B-JP','55-DL1001BNEW1-JP');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001US_black' WHERE a.`sku` IN ('55-DL1001B-US','55-DL1001BNEW1-US','55-DL1001B-CA','55-DL1001BNEW1-CA','55-DL1001B-MX','55-DL1001BNEW1-MX');
+
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001EU_green' WHERE a.`sku` IN ('55-DL1001G-DE','55-DL1001GNEW1-DE','55-DL1001G-DELOCAL','55-DL1001G-FR','55-DL1001GNEW1-FR','55-DL1001G-IT','55-DL1001GNEW1-IT','55-DL1001G-ES','55-DL1001GNEW1-ES');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001UK_green' WHERE a.`sku` IN ('55-DL1001G-UK','55-DL1001GNEW1-UK');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001JP_green' WHERE a.`sku` IN ('55-DL1001G-JP','55-DL1001GNEW1-JP');
+UPDATE amazoninfo_discount_warning_item AS a SET a.`product_name_color`='Tomons DL1001US_green' WHERE a.`sku` IN ('55-DL1001G-US','55-DL1001GNEW1-US','55-DL1001G-CA','55-DL1001GNEW1-CA','55-DL1001G-MX','55-DL1001GNEW1-MX');
+
+
+//购买评论   amazoninfo_buy_comment       amazoninfo_vendor_orderitem   amazoninfo_product_price
+
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001EU_white' WHERE a.`sku` IN ('55-DL1001W-DE','55-DL1001WNEW1-DE','55-DL1001W-DELOCAL','55-DL1001W-FR','55-DL1001WNEW1-FR','55-DL1001W-IT','55-DL1001WNEW1-IT','55-DL1001W-ES','55-DL1001WNEW1-ES');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001UK_white' WHERE a.`sku` IN ('55-DL1001W-UK','55-DL1001WNEW1-UK');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001JP_white' WHERE a.`sku` IN ('55-DL1001W-JP','55-DL1001WNEW1-JP');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001US_white' WHERE a.`sku` IN ('55-DL1001W-US','55-DL1001WNEW1-US','55-DL1001W-CA','55-DL1001WNEW1-CA','55-DL1001W-MX','55-DL1001WNEW1-MX');
+
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001EU_black' WHERE a.`sku` IN ('55-DL1001B-DE','55-DL1001BNEW1-DE','55-DL1001B-DELOCAL','55-DL1001B-FR','55-DL1001BNEW1-FR','55-DL1001B-IT','55-DL1001BNEW1-IT','55-DL1001B-ES','55-DL1001BNEW1-ES');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001UK_black' WHERE a.`sku` IN ('55-DL1001B-UK','55-DL1001BNEW1-UK');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001JP_black' WHERE a.`sku` IN ('55-DL1001B-JP','55-DL1001BNEW1-JP');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001US_black' WHERE a.`sku` IN ('55-DL1001B-US','55-DL1001BNEW1-US','55-DL1001B-CA','55-DL1001BNEW1-CA','55-DL1001B-MX','55-DL1001BNEW1-MX');
+
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001EU_green' WHERE a.`sku` IN ('55-DL1001G-DE','55-DL1001GNEW1-DE','55-DL1001G-DELOCAL','55-DL1001G-FR','55-DL1001GNEW1-FR','55-DL1001G-IT','55-DL1001GNEW1-IT','55-DL1001G-ES','55-DL1001GNEW1-ES');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001UK_green' WHERE a.`sku` IN ('55-DL1001G-UK','55-DL1001GNEW1-UK');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001JP_green' WHERE a.`sku` IN ('55-DL1001G-JP','55-DL1001GNEW1-JP');
+UPDATE amazoninfo_buy_comment AS a SET a.`product_name`='Tomons DL1001US_green' WHERE a.`sku` IN ('55-DL1001G-US','55-DL1001GNEW1-US','55-DL1001G-CA','55-DL1001GNEW1-CA','55-DL1001G-MX','55-DL1001GNEW1-MX');
+
+
+//
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001EU_white' WHERE a.`product_name_color`='Tomons DL1001_white'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001UK_white' WHERE a.`product_name_color`='Tomons DL1001_white'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001JP_white' WHERE a.`product_name_color`='Tomons DL1001_white'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001US_white' WHERE a.`product_name_color`='Tomons DL1001_white'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001EU_black' WHERE a.`product_name_color`='Tomons DL1001_black'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001UK_black' WHERE a.`product_name_color`='Tomons DL1001_black'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001JP_black' WHERE a.`product_name_color`='Tomons DL1001_black'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001US_black' WHERE a.`product_name_color`='Tomons DL1001_black'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001EU_green' WHERE a.`product_name_color`='Tomons DL1001_green'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001UK_green' WHERE a.`product_name_color`='Tomons DL1001_green'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001JP_green' WHERE a.`product_name_color`='Tomons DL1001_green'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_out_of_product AS a SET a.`product_name_color`='Tomons DL1001US_green' WHERE a.`product_name_color`='Tomons DL1001_green'  AND a.`country` IN ('com','ca','mx');
+//手动先删除原来的 保本价amazoninfo_product_sale_price 
+//更新  利润表  amazoninfo_sale_profit    amazoninfo_report_month_type 按月利润统计
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001EU_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001UK_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001JP_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001US_white' WHERE a.`product_name`='Tomons DL1001_white'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001EU_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001UK_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001JP_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001US_black' WHERE a.`product_name`='Tomons DL1001_black'  AND a.`country` IN ('com','ca','mx');
+
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001EU_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('de','fr','it','es');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001UK_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('uk');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001JP_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('jp');
+UPDATE amazoninfo_sale_profit AS a SET a.`product_name`='Tomons DL1001US_green' WHERE a.`product_name`='Tomons DL1001_green'  AND a.`country` IN ('com','ca','mx');
+
+
+
+//美国免税州销售额统计(根据邮编前缀分月统计美国23个免税州销售额)
+SELECT DATE_FORMAT(t.`purchase_date`,'%Y%m')AS mon, 
+SUM(CASE WHEN a.`postal_code` LIKE '35%' OR a.`postal_code` LIKE '36%' THEN t.`order_total` END) AS '阿拉巴马',
+SUM(CASE WHEN a.`postal_code` LIKE '995%' OR a.`postal_code` LIKE '996%' OR a.`postal_code` LIKE '997%' OR a.`postal_code` LIKE '998%' OR a.`postal_code` LIKE '999%' THEN t.`order_total` END) AS '阿拉斯加州',
+SUM(CASE WHEN a.`postal_code` LIKE '72%' THEN t.`order_total` END) AS '阿肯色州',
+SUM(CASE WHEN a.`postal_code` LIKE '197%' OR a.`postal_code` LIKE '198%' OR a.`postal_code` LIKE '199%' THEN t.`order_total` END) AS '特拉华州',
+SUM(CASE WHEN a.`postal_code` LIKE '96%' THEN t.`order_total` END) AS '夏威夷州',
+SUM(CASE WHEN a.`postal_code` LIKE '83%' THEN t.`order_total` END) AS '爱达荷州',
+SUM(CASE WHEN a.`postal_code` LIKE '50%' OR a.`postal_code` LIKE '52%' THEN t.`order_total` END) AS '爱荷华州',
+SUM(CASE WHEN a.`postal_code` LIKE '70%' THEN t.`order_total` END) AS '路易斯安那州',
+SUM(CASE WHEN a.`postal_code` LIKE '04%' THEN t.`order_total` END) AS '缅因州',
+SUM(CASE WHEN a.`postal_code` LIKE '390%' OR a.`postal_code` LIKE '391%' OR a.`postal_code` LIKE '392%' OR a.`postal_code` LIKE '393%' OR a.`postal_code` LIKE '394%' OR a.`postal_code` LIKE '395%' OR a.`postal_code` LIKE '396%' OR a.`postal_code` LIKE '397%' THEN t.`order_total` END) AS '密西西比州',
+SUM(CASE WHEN a.`postal_code` LIKE '63%' OR a.`postal_code` LIKE '64%' OR a.`postal_code` LIKE '65%' THEN t.`order_total` END) AS '密苏里州',
+SUM(CASE WHEN a.`postal_code` LIKE '59%' THEN t.`order_total` END) AS '蒙大拿州',
+SUM(CASE WHEN a.`postal_code` LIKE '68%' THEN t.`order_total` END) AS '内布拉斯加州',
+SUM(CASE WHEN a.`postal_code` LIKE '03%' THEN t.`order_total` END) AS '新罕布什尔州',
+SUM(CASE WHEN a.`postal_code` LIKE '87%' THEN t.`order_total` END) AS '新墨西哥州',
+SUM(CASE WHEN a.`postal_code` LIKE '73%' OR a.`postal_code` LIKE '74%' THEN t.`order_total` END) AS '俄克拉荷马州',
+SUM(CASE WHEN a.`postal_code` LIKE '97%' THEN t.`order_total` END) AS '俄勒冈州',
+SUM(CASE WHEN a.`postal_code` LIKE '028%' OR a.`postal_code` LIKE '029%' THEN t.`order_total` END) AS '罗德岛州',
+SUM(CASE WHEN a.`postal_code` LIKE '57%' THEN t.`order_total` END) AS '南达科他州',
+SUM(CASE WHEN a.`postal_code` LIKE '84%' THEN t.`order_total` END) AS '犹他州',
+SUM(CASE WHEN a.`postal_code` LIKE '05%' THEN t.`order_total` END) AS '佛蒙特州',
+SUM(CASE WHEN a.`postal_code` LIKE '82%' THEN t.`order_total` END) AS '怀俄明州',
+SUM(CASE WHEN a.`postal_code` LIKE '200%' OR a.`postal_code` LIKE '201%' OR a.`postal_code` LIKE '202%' OR a.`postal_code` LIKE '203%' OR a.`postal_code` LIKE '204%' OR a.`postal_code` LIKE '205%' THEN t.`order_total` END) AS '哥伦比亚特区',
+//有税州
+SUM(CASE WHEN a.`postal_code` LIKE '85%' THEN t.`order_total` END) AS '阿利桑那州',
+SUM(CASE WHEN a.`postal_code` LIKE '90%' OR a.`postal_code` LIKE '92%' OR a.`postal_code` LIKE '94%' OR a.`postal_code` LIKE '95%' THEN t.`order_total` END) AS '加利福尼亚州',
+SUM(CASE WHEN a.`postal_code` LIKE '80%' THEN t.`order_total` END) AS '科罗拉多州',
+SUM(CASE WHEN a.`postal_code` LIKE '06%' THEN t.`order_total` END) AS '康涅狄格州',
+SUM(CASE WHEN a.`postal_code` LIKE '32%' OR a.`postal_code` LIKE '33%' THEN t.`order_total` END) AS '佛罗里达州',
+SUM(CASE WHEN a.`postal_code` LIKE '30%' OR a.`postal_code` LIKE '31%' OR a.`postal_code` LIKE '398%' OR a.`postal_code` LIKE '399%' THEN t.`order_total` END) AS '乔治亚州',
+SUM(CASE WHEN a.`postal_code` LIKE '60%' OR a.`postal_code` LIKE '61%' OR a.`postal_code` LIKE '62%' THEN t.`order_total` END) AS '伊利诺斯州',
+SUM(CASE WHEN a.`postal_code` LIKE '46%' OR a.`postal_code` LIKE '47%' THEN t.`order_total` END) AS '印第安纳州',
+SUM(CASE WHEN a.`postal_code` LIKE '66%' OR a.`postal_code` LIKE '67%' THEN t.`order_total` END) AS '堪萨斯州',
+SUM(CASE WHEN a.`postal_code` LIKE '40%' THEN t.`order_total` END) AS '肯塔基州',
+SUM(CASE WHEN a.`postal_code` LIKE '21%' OR a.`postal_code` LIKE '206%' OR a.`postal_code` LIKE '207%' OR a.`postal_code` LIKE '208%' OR a.`postal_code` LIKE '209%' THEN t.`order_total` END) AS '马里兰州',
+SUM(CASE WHEN a.`postal_code` LIKE '01%' OR a.`postal_code` LIKE '020%' OR a.`postal_code` LIKE '021%' OR a.`postal_code` LIKE '022%' OR a.`postal_code` LIKE '023%' OR a.`postal_code` LIKE '024%' OR a.`postal_code` LIKE '025%' OR a.`postal_code` LIKE '026%' OR a.`postal_code` LIKE '027%' THEN t.`order_total` END) AS '马萨诸塞州',
+SUM(CASE WHEN a.`postal_code` LIKE '48%' OR a.`postal_code` LIKE '49%' THEN t.`order_total` END) AS '密歇根州',
+SUM(CASE WHEN a.`postal_code` LIKE '55%' THEN t.`order_total` END) AS '明尼苏达州',
+SUM(CASE WHEN a.`postal_code` LIKE '89%' THEN t.`order_total` END) AS '内华达州',
+SUM(CASE WHEN a.`postal_code` LIKE '07%' OR a.`postal_code` LIKE '08%' THEN t.`order_total` END) AS '新泽西州',
+SUM(CASE WHEN a.`postal_code` LIKE '10%' OR a.`postal_code` LIKE '11%' OR a.`postal_code` LIKE '12%' OR a.`postal_code` LIKE '14%' THEN t.`order_total` END) AS '纽约州',
+SUM(CASE WHEN a.`postal_code` LIKE '27%' OR a.`postal_code` LIKE '28%' THEN t.`order_total` END) AS '北卡罗来纳州',
+SUM(CASE WHEN a.`postal_code` LIKE '58%' THEN t.`order_total` END) AS '北达科他州',
+SUM(CASE WHEN a.`postal_code` LIKE '43%' OR a.`postal_code` LIKE '44%' OR a.`postal_code` LIKE '45%' THEN t.`order_total` END) AS '俄亥俄州',
+SUM(CASE WHEN a.`postal_code` LIKE '15%' OR a.`postal_code` LIKE '16%' OR a.`postal_code` LIKE '17%' OR a.`postal_code` LIKE '190%' OR a.`postal_code` LIKE '191%' OR a.`postal_code` LIKE '192%' OR a.`postal_code` LIKE '193%' OR a.`postal_code` LIKE '194%' OR a.`postal_code` LIKE '195%' OR a.`postal_code` LIKE '196%' THEN t.`order_total` END) AS '宾夕法尼亚州',
+SUM(CASE WHEN a.`postal_code` LIKE '29%' THEN t.`order_total` END) AS '南卡罗来纳州',
+SUM(CASE WHEN a.`postal_code` LIKE '37%' OR a.`postal_code` LIKE '38%' THEN t.`order_total` END) AS '田纳西州',
+SUM(CASE WHEN a.`postal_code` LIKE '75%' OR a.`postal_code` LIKE '77%' OR a.`postal_code` LIKE '78%' THEN t.`order_total` END) AS '得克萨斯州',
+SUM(CASE WHEN a.`postal_code` LIKE '23%' THEN t.`order_total` END) AS '弗吉尼亚州',
+SUM(CASE WHEN a.`postal_code` LIKE '98%' OR a.`postal_code` LIKE '990%' OR a.`postal_code` LIKE '991%' OR a.`postal_code` LIKE '992%' OR a.`postal_code` LIKE '993%' OR a.`postal_code` LIKE '994%' THEN t.`order_total` END) AS '华盛顿州',
+SUM(CASE WHEN a.`postal_code` LIKE '25%' OR a.`postal_code` LIKE '26%' THEN t.`order_total` END) AS '西弗吉尼亚州',
+SUM(CASE WHEN a.`postal_code` LIKE '53%' THEN t.`order_total` END) AS '威斯康辛州'
+FROM `amazoninfo_order` t, `amazoninfo_address` a
+WHERE t.`shipping_address`= a.`id` AND t.`order_status`='Shipped' AND a.`country_code`='US' AND t.`purchase_date`>'2015-01-01 00:00:00' GROUP BY mon
+
+
+
+
+
+

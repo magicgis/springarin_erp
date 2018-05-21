@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+    <data row="4" cell="6">formatDate</data>
+	<data row="5" cell="6">cinvoiceNo</data>
+    <data row="6" cell="6">pinvoiceNo</data>
+    <data row="8" cell="1">rate1</data>
+    <data row="10" cell="6">weight</data>
+    <data row="10" cell="7">weight</data>
+    <data row="10" cell="8">unitPrice</data>
+     
+    <data row="11" cell="7">weight</data>
+    <data row="11" cell="8">unitPrice</data>
+    <list startRow="10" items="items">
+	</list>
+</datas>

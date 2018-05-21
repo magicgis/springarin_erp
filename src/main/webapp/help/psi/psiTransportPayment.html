@@ -1,0 +1,48 @@
+<html>     
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+<title>Transport Payment</title>
+</head>
+
+<body bgcolor="white">
+<span style="position:fixed;top: 20px; left: 90%;"> <input  type="button" style="padding: 4px 12px; font-size: 16px;color: #333;text-align: center;text-shadow: 1 1px 1px rgba(255,255,255,0.75);  background-color: #f5f5f5; border: 1px solid #ccc;  border-color: #e6e6e6 #e6e6e6 #bfbfbf;  border-radius: 4px;"  value="返 回" onclick="history.go(-1)"/> </span>
+
+<H2 align=left><font face="Tahoma">运单付款管理</font></H2> 
+<hr noshade size="1" color="#000080">         
+<p>1、运单付款列表页面,如下图</P>
+	 <p><img border="0" src="../images/psi/transportPayment_list.png" width="1300" height="300"></p>   
+	 <ol>
+	 <li style="line-height:22px;">如图该页面可以对运单付款进行：新建、编辑、取消等操作</li>
+	 </ol>   
+ 
+ 
+ <p>2、新建运单页面,如下图</P>
+	 <p><img border="0" src="../images/psi/transportPayment_add.png" width="1270" height="700"></p>   
+	 <ol>
+	  <li style="line-height:22px;">进入新建运单付款页面，选择承运商会带出该供应商所有未付款的运单及运单款项，填写汇率后会自动计算转换后金额（转换后金额=应付金额x汇率）并选中付款项并累加到总额。计算出总额后填写汇率得到付款金额（可以改动付款金额），然后选择本次申请运单付款的货币类型</li>
+	<li style="line-height:22px;">点击保存则付款进入草稿状态，点击申请进入申请状态（后台会自动发送邮件给付款人）</li>
+	<li style="line-height:22px;">运单付款功能隐藏的公式：转换后金额=费用x汇率;总额=各转换后金额累加;付款金额=总额÷汇率</li>
+	 </ol>  
+ 
+ 
+  <p>3、编辑航空运单页面,如下图</P>
+	 <p><img border="0" src="../images/psi/transportPayment_sure.png" width="1300" height="710"></p>   
+	 <ol>
+	  <li style="line-height:22px;">如上图，运单付款一旦确认，那么关联的相应运单费用项不可修改</li>
+	  <li style="line-height:22px;">运单所有的费用项都付款了，则付款项不能再修改，如果要修改可以到“运单付款修正”功能对该运单相应的项进行校正</li>
+	 </ol>  
+	
+	
+	 
+	 
+</body>
+
+
+</html>
+
+
+
+
+
+
+

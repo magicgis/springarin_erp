@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config>
+    <country>
+        <email>
+            <endOrderHours>48</endOrderHours>
+            <param>
+                <name>productName</name>
+                <paramMap>
+                    <entry>
+                        <key>B00SM5NLRY</key>
+                        <value>HB4009_Manuel en francais.pdf</value>
+                    </entry>
+                </paramMap>
+            </param>
+            <startOrderId>1</startOrderId>
+            <subject>Après vente HB4009 - Manuel en Français</subject>
+            <templateName>Instructions</templateName>
+        </email>
+        <name>fr</name>
+    </country>
+</config>

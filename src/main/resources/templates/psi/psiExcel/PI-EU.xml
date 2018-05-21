@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="4" cell="8">formatDate</data>
+	<data row="5" cell="8">cinvoiceNo</data>
+	<data row="6" cell="8">pinvoiceNo</data>
+	<data row="8" cell="1">rate1</data>
+	<list startRow="10" items="items">
+		<field cell="0" colspan="0" type="1">id</field>
+		<fieldObject cell="1" name="product" colspan="0" type="0">brand</fieldObject>
+		<fieldObject cell="2" name="product" colspan="0" type="0">model</fieldObject>
+		<fieldObject cell="3" name="product" colspan="2" type="0">type</fieldObject>
+		<fieldObject cell="5" name="product" colspan="0" type="0">hkHscode</fieldObject>
+        <fieldObject cell="6" name="product" colspan="0" type="0">euHscode</fieldObject>
+		<field cell="7" colspan="0" type="0">quantity</field>
+        <field cell="8" colspan="0" type="0">itemPrice</field>
+        <field cell="9" colspan="0" type="1">amountUsd</field>
+		<field cell="10" colspan="0" type="1">amountEuro</field>
+               
+	</list>
+</datas>

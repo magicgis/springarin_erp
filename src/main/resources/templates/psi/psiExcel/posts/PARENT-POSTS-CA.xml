@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+   <!--  <data row="3" cell="0">sku</data>
+	<data row="3" cell="1">ean</data>
+	<data row="3" cell="2">productIdType</data>
+	<data row="3" cell="3">title</data>
+	<data row="3" cell="4">description</data>
+	<data row="3" cell="5">productTypeName</data>
+	<data row="3" cell="6">brand</data>
+    <data row="3" cell="7">manufacturer</data>
+	<data row="3" cell="8">partNumber</data>
+	<data row="3" cell="11">currency</data>
+	<data row="3" cell="12">conditionType</data>
+	<data row="3" cell="21">productTaxCode</data>
+	<data row="3" cell="45">feature1</data>
+    <data row="3" cell="46">feature2</data>
+    <data row="3" cell="47">feature3</data>
+    <data row="3" cell="48">feature4</data>
+    <data row="3" cell="49">feature5</data>
+    <data row="3" cell="51">catalog1</data>
+    <data row="3" cell="52">catalog2</data>
+    <data row="3" cell="71">keyword1</data>
+    <data row="3" cell="72">keyword2</data>
+    <data row="3" cell="73">keyword3</data>
+    <data row="3" cell="74">keyword4</data>
+    <data row="3" cell="75">keyword5</data>
+    <data row="3" cell="91">fulfillmentCenterId</data>
+	<data row="3" cell="92">packageHeight</data>
+    <data row="3" cell="93">packageWidth</data>
+    <data row="3" cell="94">packageLength</data>
+    <data row="3" cell="98">parentage</data>
+    <data row="3" cell="99">parentSku</data>
+    <data row="3" cell="100">relationshipType</data>
+    <data row="3" cell="101">variationTheme</data>
+    <data row="3" cell="131">color</data>
+    <data row="3" cell="133">size</data> -->
+    <list startRow="4" items="children">
+        <field  colspan="0" type="0" cell="0">sku</field>
+		<field  colspan="0" type="0" cell="1">ean</field>
+		<field  colspan="0" type="0" cell="2">productIdType</field>
+		<field  colspan="0" type="0" cell="3">title</field>
+		<field  colspan="0" type="0" cell="4">description</field>
+		<field  colspan="0" type="0" cell="5">productTypeName</field>
+		<field  colspan="0" type="0" cell="6">brand</field>
+	    <field  colspan="0" type="0" cell="7">manufacturer</field>
+		<field  colspan="0" type="0" cell="8">partNumber</field>
+		<field  colspan="0" type="0" cell="11">currency</field>
+	    <field  colspan="0" type="0" cell="12">conditionType</field>
+	    <field  colspan="0" type="0" cell="21">productTaxCode</field>
+		<field  colspan="0" type="0" cell="45">feature1</field>
+	    <field  colspan="0" type="0" cell="46">feature2</field>
+	    <field  colspan="0" type="0" cell="47">feature3</field>
+	    <field  colspan="0" type="0" cell="48">feature4</field>
+	    <field  colspan="0" type="0" cell="49">feature5</field>
+	    <field  colspan="0" type="0" cell="51">catalog1</field>
+	    <field  colspan="0" type="0" cell="52">catalog2</field>
+	    <field  colspan="0" type="0" cell="71">keyword1</field>
+	    <field  colspan="0" type="0" cell="72">keyword2</field>
+	    <field  colspan="0" type="0" cell="73">keyword3</field>
+	    <field  colspan="0" type="0" cell="74">keyword4</field>
+	    <field  colspan="0" type="0" cell="75">keyword5</field>
+	    <field  colspan="0" type="0" cell="91">fulfillmentCenterId</field>
+		<field  colspan="0" type="0" cell="92">packageHeight</field>
+	    <field  colspan="0" type="0" cell="93">packageWidth</field>
+	    <field  colspan="0" type="0" cell="94">packageLength</field>
+	    <field  colspan="0" type="0" cell="95">unit</field>
+	    <field  colspan="0" type="0" cell="98">parentage</field>
+	    <field  colspan="0" type="0" cell="99">parentSku</field>
+	    <field  colspan="0" type="0" cell="100">relationshipType</field>
+	    <field  colspan="0" type="0" cell="101">variationTheme</field>
+	    <field  colspan="0" type="0" cell="131">color</field>
+	    <field  colspan="0" type="0" cell="133">size</field>
+	</list>
+</datas>

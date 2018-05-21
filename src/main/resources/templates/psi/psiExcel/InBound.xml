@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="3" cell="8">flowNo</data>  
+	<data row="6" cell="1">supplierName</data> 
+	<data row="6" cell="7">supplierPhone</data> 
+    <data row="7" cell="1">billNo</data>   
+    <data row="7" cell="7">formatDate</data>
+	<data row="8" cell="1">tranMan</data>
+	<data row="8" cell="5">phone</data>
+	<data row="8" cell="8">carNo</data>
+	
+	<list startRow="10" items="items">   
+		<field cell="0" colspan="0" type="0">productName</field>
+		<field cell="1" colspan="0" type="0">colorCode</field>
+		<field cell="2" colspan="0" type="0">countryCode</field>
+		<field cell="3" colspan="0" type="0">packQuantity</field>
+		<field cell="4" colspan="0" type="0">boxNumber</field>
+		<field cell="5" colspan="0" type="0">quantity</field>
+		<field cell="6" colspan="0" type="0">gw</field>
+		<field cell="7" colspan="0" type="0">boxVolume</field>
+	</list>
+	
+	
+</datas>  

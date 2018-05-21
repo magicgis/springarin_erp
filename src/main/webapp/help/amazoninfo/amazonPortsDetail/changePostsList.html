@@ -1,0 +1,96 @@
+﻿<html>
+
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<title>Post Edit Management</title>
+</head>
+
+<body bgcolor="white">
+<H2 align=left><font face="Tahoma">帖子编辑</font></H2> 
+<hr noshade size="1" color="#000080">
+
+<p>帖子编辑包括新增母帖、新增普通帖、新增本地帖、复制贴、cross帖、修改帖子、删除帖子、帖子一键还原和帖子类型转换操作</p>           
+
+
+<p><b>帖子信息列表</b>:<br> 
+<p><img border="0" src="../../images/amazon/postEdit_index.png" width="820" height="292"></p>         
+ <ol>
+  <li style="line-height:22px;">结果摘要列，将鼠标移至结果列会悬浮显示结果明细，每一操作结果第三位数字为0代表完全操作成功</li>
+  <li style="line-height:22px;">详细结果文件列，最多有三种结果类型文件，编辑、类型和价格，点击即可下载结果文件，针对结果列失败结果下载相应文件查看即可知道失败原因</li>
+  <li style="line-height:22px;">编辑帖子、新增本地帖和新增复制贴上传失败，点击编辑按钮可继续上传提交修改内容</li>
+  <li style="line-height:22px;">点击查看亚马逊帖子信息链接查看亚马逊官网帖子显示情况，点击查看更多详情链接查看所有修改内容</li>
+ </ol>     
+</p>      
+
+<p><b>新增管理</b>:<br>      
+ <ol>
+    <li style="line-height:22px;">新增母帖</li>
+    <p><img border="0" src="../../images/amazon/postsEdit_parentAdd.png" width="820" height="292"></p> 
+    <ul>
+      <li>点击新增父帖，支持批量新增父帖</li>
+      <li>填写母SKU时会判断是否存在相同母SKU</li>
+    </ul>
+    <li style="line-height:22px;">新增普通帖</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_add.png" width="820" height="292"></p> 
+     <ul>
+      <li>点击新增帖子，支持批量新增普通帖</li>
+      <li>仅欧洲国家会出现设置同Asin选择框，选择设置同Asin，会设置选择Sku相同的基本信息；不选择设置同Asin，需自己手动填写红色标注的所有文本框</li>
+     </ul>
+    <li style="line-height:22px;">新增本地帖</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_local.png" width="820" height="292"></p> 
+     <ul>
+      <li>点击新增帖子，支持批量新增本地帖</li>
+      <li>选择Sku，会设置选择Sku相同的基本信息；不选择Sku，需自己手动填写红色标注的所有文本框</li>
+     </ul>
+    <li style="line-height:22px;">复制帖</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_copy.png" width="820" height="292"></p> 
+     <ul>
+      <li>点击新增帖子，支持批量新增本地帖</li>
+      <li>仅欧洲国家会出现设置同Asin选择框，选择设置同Asin，会设置选择Sku相同的基本信息；不选择设置同Asin，需自己手动填写Asin、Sku等信息</li>
+      <li>选择复制Sku，会根据选择的Sku设置所有帖子相关内容。英语国家可以相互复制，其他国家复制本国sku帖子内容</li>
+     </ul>
+     <li style="line-height:22px;">Cross帖</li>
+      <p><img border="0" src="../../images/amazon/postsEdit_cross.png" width="820" height="292"></p> 
+      <ul>
+      <li>点击新增，支持批量新增Cross帖</li>
+      <li>Cross Sku:其他欧洲国家的Sku，需要保证Sku和Cross Sku的part number一致才能保证cross成功</li>
+     </ul>
+ </ol>     
+</p> 
+
+<p><b>其他管理</b>:<br> 
+<ol>
+    <li style="line-height:22px;">编辑帖子信息</li>
+    <p><img border="0" src="../../images/amazon/postsEdit_edit.png" width="820" height="292"></p> 
+    <ul>
+      <li style="line-height:22px;">选择平台，选择产品名称，点击全部Sku修改全部Sku帖子信息，点击单个Sku修改单个Sku帖子内容，点击全部Sku会覆盖已选择的单个子Sku</li>
+      <li style="line-height:22px;">Title是必填修改内容，选择修改内容子项会自动添加相应内容文本框，点击后面"-"号可以删除文本框，选择All，添加所有内容文本框</li>
+      <li style="line-height:22px;">支持同一平台下多个Sku同时修改帖子内容</li>
+    </ul>
+    <li style="line-height:22px;">帖子类型转换</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_type.png" width="820" height="292"></p> 
+     <ul>
+      <li>选择Sku，会根据选择的Sku设置Type,如果选择Sku是FBA帖，Type会自动默认成本地帖，同时查询出本地帖数量，如果选择Sku是本地帖，Type会自动默认成FBA帖</li>
+      <li>点击新增，支持同一平台下多个Sku同时类型转换</li>
+     </ul>
+    <li style="line-height:22px;">帖子一键还原</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_recover.png" width="820" height="292"></p> 
+     <ul>
+      <li>点击新增帖子，支持批量一键还原帖子</li>
+      <li>选择Sku，会设置选择Sku相同的基本信息；不选择Sku，需自己手动填写必填文本框</li>
+     </ul>
+   <li style="line-height:22px;">删除帖子</li>
+     <p><img border="0" src="../../images/amazon/postsEdit_delete.png" width="820" height="292"></p> 
+     <ul>
+      <li>点击新增删除帖子，支持批量删除帖子</li>
+      <li>选择待删除的Sku，点击保存即可删除帖子</li>
+     </ul>
+ </ol> 
+ 
+</body>
+</html>
+
+
+
+
+

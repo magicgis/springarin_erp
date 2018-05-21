@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+    <list startRow="2" items="children">
+		 <field  colspan="0" type="0" cell="0">sku</field>
+		 <field  colspan="0" type="0" cell="1">ean</field>
+		 <field  colspan="0" type="0" cell="2">productIdType</field>
+		 <field  colspan="0" type="0" cell="3">title</field>
+	     <field  colspan="0" type="0" cell="4">brand</field>
+	     <field  colspan="0" type="0" cell="5">manufacturer</field>
+	     <field  colspan="0" type="0" cell="6">description</field>
+	     <field  colspan="0" type="0" cell="7">feature1</field>
+	     <field  colspan="0" type="0" cell="8">feature2</field>
+	     <field  colspan="0" type="0" cell="9">feature3</field>
+	     <field  colspan="0" type="0" cell="10">feature4</field>
+	     <field  colspan="0" type="0" cell="11">feature5</field>
+	     <field  colspan="0" type="0" cell="12">catalog1</field>
+	     <field  colspan="0" type="0" cell="13">catalog2</field>
+	     <field  colspan="0" type="0" cell="14">productTypeName</field>
+	     <field  colspan="0" type="0" cell="16">currency</field>
+	     <field  colspan="0" type="0" cell="18">conditionType</field>
+	     <field  colspan="0" type="0" cell="20">productTaxCode</field>
+	     <field  colspan="0" type="0" cell="24">partNumber</field>
+	     <field  colspan="0" type="0" cell="25">keyword1</field>
+	     <field  colspan="0" type="0" cell="26">keyword2</field>
+	     <field  colspan="0" type="0" cell="27">keyword3</field>
+	     <field  colspan="0" type="0" cell="28">keyword4</field>
+	     <field  colspan="0" type="0" cell="29">keyword5</field>
+	     
+	     <field  colspan="0" type="0" cell="45">fulfillmentCenterId</field>
+	     <field  colspan="0" type="0" cell="46">packageHeight</field>
+	     <field  colspan="0" type="0" cell="47">packageWidth</field>
+	     <field  colspan="0" type="0" cell="48">packageLength</field>
+	     <field  colspan="0" type="0" cell="49">unit</field>
+	     <field  colspan="0" type="0" cell="52">parentage</field>
+	     <field  colspan="0" type="0" cell="53">parentSku</field>
+	     <field  colspan="0" type="0" cell="54">relationshipType</field>
+	     <field  colspan="0" type="0" cell="55">variationTheme</field>
+	     <field  colspan="0" type="0" cell="56">color</field>
+	     <field  colspan="0" type="0" cell="58">size</field>
+	</list>
+</datas>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+ <list startRow="3" items="children">
+	 <field  colspan="0" type="0" cell="0">sku</field>
+	 <field  colspan="0" type="0" cell="1">asin</field>
+	 <field  colspan="0" type="0" cell="2">productIdType</field>
+	 <field  colspan="0" type="0" cell="3">title</field>
+     <field  colspan="0" type="0" cell="4">brand</field>
+     <field  colspan="0" type="0" cell="5">manufacturer</field>
+     <field  colspan="0" type="0" cell="6">productTypeName</field>
+     <field  colspan="0" type="0" cell="7">partNumber</field>
+     <field  colspan="0" type="0" cell="8">description</field>
+     <field  colspan="0" type="0" cell="13">currency</field>
+     <field  colspan="0" type="0" cell="16">conditionType</field>
+     
+     <field  colspan="0" type="0" cell="50">feature1</field>
+     <field  colspan="0" type="0" cell="51">feature2</field>
+     <field  colspan="0" type="0" cell="52">feature3</field>
+     <field  colspan="0" type="0" cell="53">feature4</field>
+     <field  colspan="0" type="0" cell="54">feature5</field>
+     <field  colspan="0" type="0" cell="60">catalog1</field>
+     <field  colspan="0" type="0" cell="61">catalog2</field>
+     <field  colspan="0" type="0" cell="77">fulfillmentCenterId</field>
+    <!--  <field  colspan="0" type="0" cell="78">packageLength</field>
+     <field  colspan="0" type="0" cell="79">packageWidth</field>
+     <field  colspan="0" type="0" cell="80">packageHeight</field> -->
+    
+     <field  colspan="0" type="0" cell="84">parentage</field>
+     <field  colspan="0" type="0" cell="85">parentSku</field>
+     <field  colspan="0" type="0" cell="86">relationshipType</field>
+     <field  colspan="0" type="0" cell="87">variationTheme</field>
+     <field  colspan="0" type="0" cell="91">color</field>
+     <field  colspan="0" type="0" cell="93">size</field>
+  </list>
+</datas>

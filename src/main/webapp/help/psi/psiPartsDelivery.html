@@ -1,0 +1,48 @@
+<html>     
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+<title>Parts Delivery Manager</title>
+</head>
+
+<body bgcolor="white">
+<span style="position:fixed;top: 20px; left: 90%;"> <input  type="button" style="padding: 4px 12px; font-size: 16px;color: #333;text-align: center;text-shadow: 1 1px 1px rgba(255,255,255,0.75);  background-color: #f5f5f5; border: 1px solid #ccc;  border-color: #e6e6e6 #e6e6e6 #bfbfbf;  border-radius: 4px;"  value="返 回" onclick="history.go(-1)"/> </span>
+
+<H2 align=left><font face="Tahoma">配件收货管理</font></H2> 
+<hr noshade size="1" color="#000080">         
+<p>1、配件收货列表页面,如下图</P>
+	<p><img border="0" src="../images/psi/partsDelivery_list.jpg" width="1300" height="350"></p>   
+	 <ol>
+	  <li style="line-height:22px;">可对配件收货进行编辑、取消、确认等操作</li>
+	  <li style="line-height:22px;">如果一个配件收货里有多个产品会显示在多行里，点击“概要”后会显示该产品所有平台及数量</li>
+	  <li style="line-height:22px;">选中序号前的选择框，点击“计算勾选货品装箱体积和重量“按钮，可以对选中产品进行重量体积试算</li>
+	  <li style="line-height:22px;">提单在没有付款/预付款时可以取消，在没确认没付款时可以编辑</li>
+	 </ol>   
+ 
+ <p>2、配件收货新建页面,如下图</P>
+	<p><img border="0" src="../images/psi/partsDelivery_add.jpg" width="1300" height="400"></p>   
+	 <ol>
+	  <li style="line-height:22px;">从“配件订单”list页选择要收货的配件进入收货页面，可以对多配件的多个订单进行收货操作，但必须是同一个供应商同货币类型</li>
+	  <li style="line-height:22px;">收货数量必须为装箱数的整数倍</li>
+	  <li style="line-height:22px;">点击保存后配件收货为“新建”状态，收货的数量对应的订单“收货待确认”数量增加</li>
+	 </ol>  
+ 
+ 
+  <p>3、配件收货确认页面,如下图</P>
+  <p><img border="0" src="../images/psi/partsDelivery_sure.jpg" width="1300" height="450"></p>   
+	 <ol>
+	  <li style="line-height:22px;">这里要选择正确的sku与产品进行匹配，默认选中的是绑定的，这里很重要一定要选择正确的sku！</li>
+	  <li style="line-height:22px;">确认收货后不能对收货数据进行修改</li>
+	  <li style="line-height:22px;">相应的采购订单里“收货待确认”数量移动到“已收货”数量里</li>
+	 </ol>
+ 
+</body>
+
+
+</html>
+
+
+
+
+
+
+

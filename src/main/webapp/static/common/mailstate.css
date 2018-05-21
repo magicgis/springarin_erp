@@ -1,0 +1,20 @@
+.ico_mailtitle {border:none;padding:0;margin:0;}
+.ico_mailtitle {background:url(mail.png) 1px -82px no-repeat;width:26px;height:16px;}
+
+.ciz {width:9px;margin-top:2px;}
+.cir {width:18px;height:16px;overflow:hidden;cursor:pointer}
+.cij {width:12px;height:12px;overflow:hidden;margin-top:3px;}
+
+.Rr {background:url(mail.png) -48px -16px no-repeat;}
+.Ru {background:url(mail.png) -48px 0 no-repeat;}
+.Rh {background:url(mail.png) -48px -32px no-repeat;}
+.Rn {background:url(mail.png) -96px -16px no-repeat;}
+
+.Ju {background:url(mail.png) -65px 0 no-repeat;}
+.Zh {background:url(mail.png) -64px -15px no-repeat;}
+
+td.ci {vertical-align:top;width:50px;padding:4px 0 0 0;}
+td.ci div {float:left;}
+td.ci div.ciz {width:9px;margin-top:2px;}
+td.ci div.cir {width:18px;height:16px;overflow:hidden;cursor:pointer}
+td.ci div.cij {width:12px;height:12px;overflow:hidden;margin-top:3px;}

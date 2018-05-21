@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config>
+   
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49837</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>com</name>
+    </country>
+     <country>
+        <email>
+            <endOrderHours>48</endOrderHours>
+            <param>
+                <name>productName</name>
+                <paramMap>
+                    <entry>
+                        <key>B00JO6YEPS,B00JO6YFSE,B00JO70ZDW</key>
+                        <value>Inateck housse pour ultrabook</value>
+                    </entry>
+                    <entry>
+                        <key>B00J4BZBFA,B00GG54LKI,B00GG5HBU0,B00GG529KW</key>
+                        <value>Inateck étui pour kindle paperwhite</value>
+                    </entry>
+                    <entry>
+                        <key>B00K5LJ0AU</key>
+                        <value>Inateck housse pour kindle</value>
+                    </entry>
+                    <entry>
+                        <key>B00J88D3YK,B00HJK3V7S,B00JJG45UC,B00IJ64972,B00G8R7MV4,B00JJG43AE,B00J88D3YK</key>
+                        <value>Inateck Hub USB 3.0</value>
+                    </entry>
+                    <entry>
+                        <key>B00IJNDBM4</key>
+                        <value>Inateck boîtier pour disque dur 2.5</value>
+                    </entry>
+                    <entry>
+                        <key>B00IOH5ASS,B00IOH5C0Y,B00IOH5D8U,B00IOH5EBG,B00IOH5FLU,B00JQ2TVMQ</key>
+                        <value>Inateck chargeur usb</value>
+                    </entry>
+                    <entry>
+                        <key>B00JEVDRNS</key>
+                        <value>Inateck convertisseur USB 3.0 vers SATA/IDE</value>
+                    </entry>
+                    <entry>
+                        <key>B00E5XV0Q6,B00JM1PCRE,B00JOWWS5K,B00JM1PBD4</key>
+                        <value>Inateck enceinte nomade</value>
+                    </entry>
+                    <entry>
+                        <key>B00HZDTT84,B00IJOV6AC</key>
+                        <value>Inateck station d'accueil pour disque dur </value>
+                    </entry>
+                </paramMap>
+            </param>
+            <startOrderId>0</startOrderId>
+            <subject>Service après vente</subject>
+            <templateName>getGoodReview</templateName>
+        </email>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>48724</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>fr</name>
+    </country>
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49675</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <email>
+            <endOrderHours>48</endOrderHours>
+            <param>
+                <name>productName</name>
+                <paramMap>
+                    <entry>
+                        <key>B00IOGSZ04</key>
+                        <value>Drahtloser Barcodescanner</value>
+                    </entry>
+                    <entry>
+                        <key>B00IOH5C0Y,B00IOH5ASS,B00IOH5D8U,B00JQ2PO40,B00IOH5FLU</key>
+                        <value>USB-Ladegeräte</value>
+                    </entry>
+                    <entry>
+                        <key>B00IJNDBM4,B00HMVKDIE,B00HZDTT84</key>
+                        <value>HDD Dockingstationen/ Gehäuse</value>
+                    </entry>
+                    <entry>
+                        <key>B00JO6YEPS,B00LFK462W,B00KYN3974,B00KYN3DP2</key>
+                        <value>Macbook Pro Retina Schutztaschen</value>
+                    </entry>
+                    <entry>
+                        <key>B00JM1TQ7G,B00JM1TOJQ,B00JEVEW8C</key>
+                        <value>USB 3.0 Kabel</value>
+                    </entry>
+                    <entry>
+                        <key>B00JJG45UC,B00J88D3YK,B00G8R7MV4,B00JJG43AE</key>
+                        <value>USB 3.0 Hub</value>
+                    </entry>
+                    <entry>
+                        <key>B00IJ6B9V6,B00IJ6B8VM,B00IJ6BB1O,B00IJ6B9FM,B00IJ6B8PI,B00IJ6BA8S,B00IJ6GVFU</key>
+                        <value>HDD Schutzhüllen</value>
+                    </entry>
+                    <entry>
+                        <key>B00JM1PBD4,B00JOWWS5K,B00JM1PCRE</key>
+                        <value>Bluetooth-Lautsprecher</value>
+                    </entry>
+                    <entry>
+                        <key>B00JEVLCZI,B00JEVLEFQ</key>
+                        <value>PCI-E Expresskarten</value>
+                    </entry>
+                </paramMap>
+            </param>
+            <startOrderId>0</startOrderId>
+            <subject>Kundenservice von Inateck</subject>
+            <templateName>getGoodReview</templateName>
+        </email>
+        <name>de</name>
+    </country>
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49567</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>it</name>
+    </country>
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49581</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>es</name>
+    </country>
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49845</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>jp</name>
+    </country>
+    <country>
+        <email>
+            <endOrderHours>10</endOrderHours>
+            <startOrderId>49920</startOrderId>
+            <subject>Rechnung </subject>
+            <templateName>invoice</templateName>
+        </email>
+        <name>uk</name>
+    </country>
+</config>

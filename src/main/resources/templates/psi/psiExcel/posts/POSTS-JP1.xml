@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="3" cell="0">sku</data>
+	<data row="3" cell="1">asin</data>
+	<data row="3" cell="3">title</data>
+    <data row="3" cell="4">brand</data>
+    <data row="3" cell="5">manufacturer</data>
+    <data row="3" cell="6">productTypeName</data>
+    <data row="3" cell="7">partNumber</data>
+    <data row="3" cell="8">description</data>
+    <data row="3" cell="50">feature1</data>
+    <data row="3" cell="51">feature2</data>
+    <data row="3" cell="52">feature3</data>
+    <data row="3" cell="53">feature4</data>
+    <data row="3" cell="54">feature5</data>
+    <data row="3" cell="60">catalog1</data>
+    <data row="3" cell="61">catalog2</data>
+    <!-- <data row="3" cell="78">packageLength</data>
+    <data row="3" cell="79">packageWidth</data>
+    <data row="3" cell="80">packageHeight</data> -->
+    
+    <data row="3" cell="84">parentage</data>
+    <data row="3" cell="85">parentSku</data>
+    <data row="3" cell="86">relationshipType</data>
+    <data row="3" cell="87">variationTheme</data>
+    <data row="3" cell="91">color</data>
+    <data row="3" cell="93">size</data>
+   
+    <list startRow="4" items="tempItems">
+	</list>
+</datas>

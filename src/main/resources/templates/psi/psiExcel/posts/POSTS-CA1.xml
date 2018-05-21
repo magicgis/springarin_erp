@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="3" cell="0">sku</data>
+	<data row="3" cell="1">ean</data>
+	<data row="3" cell="3">title</data>
+	<data row="3" cell="4">description</data>
+	<data row="3" cell="5">productTypeName</data>
+	<data row="3" cell="6">brand</data>
+    <data row="3" cell="7">manufacturer</data>
+	<data row="3" cell="8">partNumber</data>
+	
+	
+	<data row="3" cell="45">feature1</data>
+    <data row="3" cell="46">feature2</data>
+    <data row="3" cell="47">feature3</data>
+    <data row="3" cell="48">feature4</data>
+    <data row="3" cell="49">feature5</data>
+    <data row="3" cell="51">catalog1</data>
+    <data row="3" cell="52">catalog2</data>
+    <data row="3" cell="71">keyword1</data>
+    <data row="3" cell="72">keyword2</data>
+    <data row="3" cell="73">keyword3</data>
+    <data row="3" cell="74">keyword4</data>
+    <data row="3" cell="75">keyword5</data>
+   
+	<data row="3" cell="92">packageHeight</data>
+    <data row="3" cell="93">packageWidth</data>
+    <data row="3" cell="94">packageLength</data>
+   
+    <data row="3" cell="98">parentage</data>
+    <data row="3" cell="99">parentSku</data>
+    <data row="3" cell="100">relationshipType</data>
+    <data row="3" cell="101">variationTheme</data>
+    <data row="3" cell="131">color</data>
+    <data row="3" cell="133">size</data>
+   
+    <list startRow="5" items="tempItems">
+	</list>
+</datas>

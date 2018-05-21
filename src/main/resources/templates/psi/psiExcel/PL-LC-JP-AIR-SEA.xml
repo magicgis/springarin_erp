@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+    <data row="3" cell="8">formatDate</data>
+	<data row="4" cell="8">cinvoiceNo</data>
+	<list startRow="17" items="items">
+		<field cell="0" colspan="0" type="0">cartonNo</field>
+		<fieldObject cell="1" name="product" colspan="0" type="0">brand</fieldObject>
+		<fieldObject cell="2" name="product" colspan="0" type="0">model</fieldObject>
+		<fieldObject cell="3" name="product" colspan="0" type="0">type</fieldObject>
+		<field cell="4" colspan="0" type="0">quantity</field>
+		<fieldObject cell="5" name="product" colspan="0" type="0">weight</fieldObject>
+        <fieldObject cell="6" name="product" colspan="0" type="0">gw</fieldObject>
+        <fieldObject cell="7" name="product" colspan="0" type="0">packLength</fieldObject>
+        <fieldObject cell="8" name="product" colspan="0" type="0">packWidth</fieldObject>
+        <fieldObject cell="9" name="product" colspan="0" type="0">packHeight</fieldObject>
+        <fieldObject cell="10" name="product" colspan="0" type="1">boxVolume</fieldObject>
+         <fieldObject cell="11" name="product" colspan="0" type="0">material</fieldObject>
+        <field cell="12" colspan="0" type="0">packQuantity</field>
+	</list>
+</datas>

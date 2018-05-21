@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+    <data row="5" cell="5">formatDate</data>
+    <data row="5" cell="7">formatDate</data>
+    <data row="7" cell="4">model</data>
+    <data row="11" cell="3">toCountry</data>
+	<data row="11" cell="5">toCountry</data>
+	<data row="13" cell="3">carrier</data>
+	<!-- <data row="13" cell="4">remark</data> -->
+	<data row="15" cell="1">cinvoiceNo</data>
+	<data row="15" cell="3">boxNumber</data>
+	<data row="15" cell="5">volume</data>
+	<data row="15" cell="7">weight</data>
+	
+	
+	<list startRow="23" items="items">
+		<fieldObject cell="1" name="product" colspan="0" type="0">cnHscode</fieldObject>
+        <fieldObject cell="2" name="product" colspan="0" type="0">type</fieldObject>
+        <field cell="4" colspan="0" type="0">countryCode</field>
+        <field cell="5" colspan="0" type="0">tempPrice</field>
+        <field cell="6" colspan="0" type="0">tempTotalPrice</field>
+        <field cell="7" colspan="0" type="0">remark</field>
+	</list>
+</datas>

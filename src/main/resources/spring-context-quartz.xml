@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:jdbc="http://www.springframework.org/schema/jdbc"  
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd"
+		default-lazy-init="true">
+
+	<description>Spring Configuration</description>
+	
+    <!-- 加载配置属性文件 -->
+	<context:property-placeholder ignore-unresolvable="true" location="classpath*:/application.properties" />
+	
+	<!--邮件监控定时器-->
+	<bean id="activateCardJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.custom.scheduler.CustomEmailMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>monitor</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	
+	<bean id="sayRunTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail" />
+		</property>
+		<property name="cronExpression">
+			<value>*/5 * * ? * *</value><!-- cronExpression是Spring定时器的特殊属性 -->
+		</property>
+	</bean>
+	
+	<!--产品更新定时器-->
+	<bean id="activateCardJobDetail1"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.ProductSynMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>synchronize1</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger1"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail1" />
+		</property>
+		<property name="cronExpression">
+			<value>0 10 10 * * ?</value><!-- cronExpression是Spring定时器的特殊属性 -->
+		</property>
+	</bean>
+	
+	<!--订单下载/产品问题-->
+	<bean id="activateCardJobDetail2"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.OrderSynMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>synchronize</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger2"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail2" />
+		</property>
+		<property name="cronExpression">
+			<!-- <value>0 30 4,11,17,23 * * ?</value>   -->
+			<value>0 43 9 * * ?</value>
+		</property>
+	</bean>
+	
+	<!--根据订单发送邮件-->
+	<bean id="activateCardJobDetail3"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.SendEmailByOrderMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>sendEmail</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger3"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail3" />
+		</property>
+		<property name="cronExpression">
+			<value>0 29 16 * * ?</value>  
+		</property>
+	</bean>
+	
+	<!--邮件监控垃圾箱定时器-->
+	<bean id="activateCardJobDetail4"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.custom.scheduler.CustomEmailJunkFolderMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>monitor</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger4"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail4" />
+		</property>
+		<property name="cronExpression">
+			<value>0 */1 * ? * *</value><!-- cronExpression是Spring定时器的特殊属性 -->
+		</property>
+	</bean>
+	
+	<!--ebay订单下载-->
+	<bean id="activateCardJobDetail5"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.ebay.scheduler.EbayOrderSynMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>execute</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger5"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail5" />
+		</property>
+		<property name="cronExpression">
+			<value>0 31 9 * * ?</value>  
+		</property>
+	</bean>
+	
+	<!--下载Settment Report-->
+	<bean id="activateCardJobDetail6"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.GetReportMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>getReport</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger6"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail6" />
+		</property>
+		<property name="cronExpression">
+			<value>0 0 4 * * ?</value>  
+		</property>
+	</bean>
+
+
+	<bean id="activateCardJobDetail7"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.GetOrderCustomId"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>getCustomId</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger7"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail7" />
+		</property>
+		<property name="cronExpression">
+			<value>0 35 17 * * ?</value>  
+		</property>
+	</bean>
+	
+	
+	<bean id="activateCardJobDetail8"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.SendEmailByOrderInTempMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>sendEmail</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="sayRunTrigger8"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail8" />
+		</property>
+		<property name="cronExpression">
+			<value>0 53 16 * * ?</value>  
+		</property>
+	</bean>
+	
+	
+	<!--下载Settment Report-->
+	<bean id="activateCardJobDetail10"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.psi.scheduler.FbaInventorySynMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>getReport</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger10"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail10" />
+		</property>
+		<property name="cronExpression">
+			<value>0 1 13 * * ?</value>  
+		</property>
+	</bean>
+	
+	
+	<bean id="activateCardJobDetail12"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.ProductPriceMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>warnPrice</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger12"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail12" />
+		</property>
+		<property name="cronExpression">
+			<value>0 31 15 * * ?</value>  
+		</property>
+	</bean>
+	
+	
+	<bean id="activateCardJobDetail13"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.psi.scheduler.FbaInboundSynMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>synFbaInbound</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger13"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail13" />
+		</property>
+		<property name="cronExpression">
+			<value>0 25 16 * * ?</value>  
+		</property>
+	</bean>
+
+	<bean id="activateCardJobDetail14"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.AdvertisingMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>getReport</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger14"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail14" />
+		</property>
+		<property name="cronExpression">
+			<value>0 47 9 * * ?</value>  
+		</property>
+	</bean>
+	
+	<!--保存系统历史信息 -->
+	<!-- <bean id="activateCardJobDetail16"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   targetObject是Spring定时器的特殊属性
+			<bean class="com.springrain.erp.modules.amazoninfo.scheduler.SaveHistoryInfoMonitor"/> 
+		</property>
+		<property name="targetMethod">    targetMethod是Spring定时器的特殊属性
+			<value>saveHistoryInfo</value>就是java类中的任务方法
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger16"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">jobDetail是Spring定时器的特殊属性
+			<ref bean="activateCardJobDetail16" />
+		</property>
+		<property name="cronExpression">
+			<value>0 19 11 * * ?</value>  
+		</property>
+	</bean> -->
+	
+	<!-- 算方差 -->
+	<bean id="activateCardJobDetail16"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.psi.scheduler.ProductVarianceMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>countVariance</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger16"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail16" />
+		</property>
+		<property name="cronExpression">
+			<value>0 58 17 * * ?</value>  
+		</property>
+	</bean>
+
+
+   <bean id="activateCardJobDetail17"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+			<bean class="com.springrain.erp.modules.psi.scheduler.WarehouseDeProductMonitor"/> 
+		</property>
+		<property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+			<value>sendEmailWarehouseLowQuantity</value><!-- 就是java类中的任务方法 -->
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<bean id="sayRunTrigger17"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+			<ref bean="activateCardJobDetail17" />
+		</property>
+		<property name="cronExpression">
+			<value>0 0 8 * * ? </value>  
+		</property>
+	</bean>
+	
+	
+    <!--广告预警定时器-->
+    <bean id="activateCardJobDetail18"
+        class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+            <bean class="com.springrain.erp.modules.amazoninfo.scheduler.AdvertisingEmailMonitor"/> 
+        </property>
+        <property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+            <value>findAdvertising</value><!-- 就是java类中的任务方法 -->
+        </property>
+        <property name="concurrent" value="false" />
+    </bean>
+    <bean id="sayRunTrigger18"
+        class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+            <ref bean="activateCardJobDetail18" />
+        </property>
+        <property name="cronExpression">
+            <value>0 0 10 * * ? *</value><!-- cronExpression是Spring定时器的特殊属性 -->
+        </property>
+    </bean>
+    
+    <!--库存预警定时器-->
+    <bean id="activateCardJobDetail19"
+        class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">   <!-- targetObject是Spring定时器的特殊属性 -->
+            <bean class="com.springrain.erp.modules.amazoninfo.scheduler.AmazonStorageMonitor"/> 
+        </property>
+        <property name="targetMethod">   <!--  targetMethod是Spring定时器的特殊属性 -->
+            <value>sendEmailOfStorage</value><!-- 就是java类中的任务方法 -->
+        </property>
+        <property name="concurrent" value="false" />
+    </bean>
+    <bean id="sayRunTrigger19"
+        class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail"><!-- jobDetail是Spring定时器的特殊属性 -->
+            <ref bean="activateCardJobDetail19" />
+        </property>
+        <property name="cronExpression">
+            <value>0 0 10 */15 * ? *</value><!-- cronExpression是Spring定时器的特殊属性 -->
+        </property>
+    </bean>
+	
+	<bean id="schedulerFactory"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">   <!--  triggers是Spring定时器的特殊属性 -->
+			<list>
+				<ref local="sayRunTrigger18" />
+				<ref local="sayRunTrigger19" />
+				<!-- 
+					<ref local="sayRunTrigger14" />	
+				<ref local="sayRunTrigger12" />	
+				<ref local="sayRunTrigger10" />	
+				<ref local="sayRunTrigger10" />	
+				<ref local="sayRunTrigger16" />	
+				<ref local="sayRunTrigger"/>
+				<ref local="sayRunTrigger1" />
+				<ref local="sayRunTrigger14" />
+				<ref local="sayRunTrigger2" />
+				<ref local="sayRunTrigger3" />
+				<ref local="sayRunTrigger4" /> 
+				<ref local="sayRunTrigger7" />
+				<ref local="sayRunTrigger4" /> 
+				<ref local="sayRunTrigger8" />
+				<ref local="sayRunTrigger10" />	
+				<ref local="sayRunTrigger" />
+				<ref local="sayRunTrigger5" />
+				<ref local="sayRunTrigger12" />	
+				<ref local="sayRunTrigger16" />
+				<ref local="sayRunTrigger10" />	
+				<ref local="sayRunTrigger13" />	
+				<ref local="sayRunTrigger6" /> -->
+				
+			</list>
+		</property>
+	</bean>
+</beans>

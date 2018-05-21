@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="27" cell="2">shipmentId</data>
+	<data row="27" cell="6">totalQuantity</data>
+	<data row="27" cell="7">totalCarton</data>
+    <data row="27" cell="8">tray</data>
+    <list startRow="28" items="tempItems">
+	</list>
+</datas>

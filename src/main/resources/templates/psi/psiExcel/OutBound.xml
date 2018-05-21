@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datas name="setting">
+	<data row="1" cell="8">flowNo</data>   
+    <data row="2" cell="8">transportNo</data>   
+    <data row="3" cell="8">modelStr</data>
+	<data row="4" cell="8">shipmentId</data>
+	<data row="5" cell="8">orgin</data>
+	<data row="5" cell="10">destination</data>
+	<data row="6" cell="8">tranMan</data>
+	<data row="7" cell="8">carNo</data>
+	<data row="8" cell="8">boxNo</data>
+	<data row="9" cell="8">formatDate</data>
+	<list startRow="13" items="items">   
+		<field cell="0" colspan="0" type="0">cartonNo</field>
+		<fieldObject cell="1" name="product" colspan="0" type="0">model</fieldObject>
+		<fieldObject cell="2" name="product" colspan="0" type="0">type</fieldObject>
+		<field cell="3"  colspan="0" type="0">colorCode</field>
+		<field cell="4" colspan="0" type="0">quantity</field>
+		<field cell="5" colspan="0" type="0">packQuantity</field>
+        <fieldObject cell="6" name="product" colspan="0" type="0">gw</fieldObject>
+        <fieldObject cell="7" name="product" colspan="0" type="0">packLength</fieldObject>
+        <fieldObject cell="8" name="product" colspan="0" type="0">packWidth</fieldObject>
+        <fieldObject cell="9" name="product" colspan="0" type="0">packHeight</fieldObject>
+        <fieldObject cell="10" name="product" colspan="0" type="1">boxVolume</fieldObject>
+	</list>
+</datas>  

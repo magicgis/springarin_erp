@@ -1,0 +1,37 @@
+1、数据库表同步规则说明,所有匹配规则为表名后缀模糊匹配,以“|”分隔(如：his表示所有以his开头的一类表)
+2、更新表字段等操作
+	双向同步表只能在219服务器数据库上修改
+	单向同步表与数据同步方向保持一致
+
+以下为同步表配置明细
+erp TO local  219单向同步到87服务器
+his|psi_m|psi_o|psi_product_avg|psi_product_g|psi_product_hi|psi_product_in|psi_product_m|psi_product_po|psi_product_pu|psi_product_tr|psi_product_ty|psi_product_v|psi_vat
+amazon|custom|e
+(psi_inventory_fba|(se|sp|face|oa|plan|temp|mix).*)$
+
+
+local TO erp  87服务器单向同步到219
+psi_forecast|psi_his|psi_lading|psi_purchase_order|psi_purchase_financial_report|psi_parts|psi_product_hs|psi_product_im|psi_product_pa|psi_product_s|psi_product_ti|psi_purchase_plan
+
+psi_purchase_amount_adjust|psi_purchase_payment|psi_transport_declare|psi_transport_payment|psi_transport_revise|psi_question
+
+双向同步
+lc|psi_fba|psi_qua|psi_transport_order|psi_supplier|sys|ac|psi_b|psi_product_attribute|psi_product_e|psi_sku|psi_stock|psi_purchase_forecast_report
+(psi_inventory|psi_inventory_gap|psi_inventory_in|psi_inventory_in_item|psi_inventory_location|psi_invoice_product)$
+(psi_inventory_out|psi_inventory_out_item|psi_inventory_revision_log|psi_inventory_taking_log|psi_inventory_turnover_data)$
+psi_product
+双向同步表中psi_product为特殊表(psi_product开头的表有多种规则,此表配置后缀模糊匹配,需要注意)
+
+
+otter manager地址
+http://192.81.135.103:8090/channelList.htm
+
+
+
+
+
+
+
+
+
+

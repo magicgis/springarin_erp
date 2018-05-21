@@ -1,0 +1,49 @@
+<html>     
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+<title>Parts Payment</title>
+</head>
+
+<body bgcolor="white">
+<span style="position:fixed;top: 20px; left: 90%;"> <input  type="button" style="padding: 4px 12px; font-size: 16px;color: #333;text-align: center;text-shadow: 1 1px 1px rgba(255,255,255,0.75);  background-color: #f5f5f5; border: 1px solid #ccc;  border-color: #e6e6e6 #e6e6e6 #bfbfbf;  border-radius: 4px;"  value="返 回" onclick="history.go(-1)"/> </span>
+
+<H2 align=left><font face="Tahoma">配件付款管理</font></H2> 
+<hr noshade size="1" color="#000080">         
+<p>1、配件付款列表页面,如下图</P>
+	<p><img border="0" src="../images/psi/partsPayment_list.jpg" width="1300" height="300"></p>   
+	 <ol>
+	  <li style="line-height:22px;">如上图，可对配件付款进行新建、编辑、取消、确认等操作</li>
+	  <li style="line-height:22px;">一个订单只能有一个定金，并且一次要付完定金金额;一个收货单(尾款)则可以分多次，直到金额完全付完为止</li>
+	  <li style="line-height:22px;">页面显示的金额为折算成美元后的金额</li>
+	  <li style="line-height:22px;">如果付款完成、相应的订单、收货单的付款状态都会变成</li>
+	 </ol>   
+ 
+ 
+ <p>2、配件付款新建页面,如下图</P>
+	<p><img border="0" src="../images/psi/partsPayment_add.jpg" width="1300" height="400"></p>   
+	 <ol>
+	  <li style="line-height:22px;">进入上图页面，可以选择供应商然后点击“增加付款项”，相应的详细列表里出现“定金”、“尾款”的金额</li>
+	  <li style="line-height:22px;">如果是定金，不能修改付款金额；如果是尾款，可以修改付款比例或者直接修改付款金额</li>
+	  <li style="line-height:22px;">点击“保存”后付款单为“新建”状态，点击“申请”后会给财务发送付款邮件</li>
+	 </ol>  
+ 
+ 
+ 
+  <p>3、配件付款确认页面,如下图</P>
+  <p><img border="0" src="../images/psi/partsPayment_sure.jpg" width="1300" height="500"></p>   
+	 <ol>
+	   <li style="line-height:22px;">这里必须要上传付款水单</li>
+	  <li style="line-height:22px;">确认后会联动相应的订单和收货单，如果订单已收货完成并且付款完毕，该订单就会变为“已完成”状态</li>
+	 </ol>
+ 
+</body>
+
+
+</html>
+
+
+
+
+
+
+
