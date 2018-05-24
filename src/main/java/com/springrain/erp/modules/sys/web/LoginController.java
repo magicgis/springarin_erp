@@ -70,9 +70,7 @@ public class LoginController extends BaseController {
 	 * http://127.0.0.1:8090/springrain-erp/a/login?username=admin&loginType=0
 	 */
 	@RequestMapping(value = "${adminPath}/login", method = RequestMethod.GET)
-	public String getLogin(String code,
-			HttpServletRequest request,
-			HttpServletResponse response, Model model) {
+	public String getLogin(String code,HttpServletRequest request,HttpServletResponse response, Model model) {
 		if (StringUtils.isNotEmpty(code)) {
 			try {
 				String userId = getUserIdByDingCode(code);

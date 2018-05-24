@@ -1,17 +1,18 @@
 package com.springrain.erp;
 
 import com.springrain.erp.common.utils.HttpRequest;
+import com.springrain.erp.modules.sys.web.LoginController;
 
 public class Test2 {
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		/*String json = HttpRequest.sendPost("http://50.62.30.143/api/AAsin_API.php"
 				, "k1=masin123.Op9787/LJqw&k2=3efs59jf>pasjd");*/
 		
-		String json1 = HttpRequest.sendPost("http://50.62.30.143/api/AAsin_API.php"
+		/*String json1 = HttpRequest.sendPost("http://50.62.30.143/api/AAsin_API.php"
 				, "k1=masin123.Op9787/LJqw&k2=3efs59jf>pasjd");
 		
-		System.out.println(json1);
+		System.out.println(json1);*/
 		/*final File excel = new File("d:/111/68-BK1003E-UK  2014.8.21.xlsx");
 		try {
 			final File txt = FeedSubmissionController.excelToTabTxt(false, new FeedSubmission(), excel);

@@ -201,6 +201,16 @@
     <servlet-name>WeixinNoMsgServlet</servlet-name>
     <url-pattern>/servlet/weixinNoMsgServlet</url-pattern>
   </servlet-mapping>
+    <servlet>
+        <display-name>EventChangeReceiveServlet</display-name>
+        <servlet-name>EventChangeReceiveServlet</servlet-name>
+        <servlet-class>com.springrain.erp.modules.dingding.servlet.EventChangeReceiveServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>EventChangeReceiveServlet</servlet-name>
+        <url-pattern>/servlet/eventreceive</url-pattern>
+    </servlet-mapping>
+
   <session-config>
     <session-timeout>480</session-timeout>
   </session-config>
